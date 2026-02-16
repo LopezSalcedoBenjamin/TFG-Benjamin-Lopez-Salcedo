@@ -6,7 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
 
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/app.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/domain/entities/node_entity.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'file_Manager.dart';
 
 void main() {
   runApp(const NiaApp());
@@ -124,7 +127,7 @@ class PruebasFilePicker extends StatelessWidget {
 
             ElevatedButton(
               onPressed: () async {
-                dir = await pickFolder();
+                dir = await FileManager.pickFolder();
                 print("Carpeta seleccionada: $dir");
                 //if (folders.contains(dir)==false) folders.add(dir!);
                 folders.add(dir!);
@@ -135,14 +138,14 @@ class PruebasFilePicker extends StatelessWidget {
 
             ElevatedButton(
               onPressed: () {
-                createFolder("$dir", "test");
+                FileManager.createFolder("$dir", "test");
               },
               child: Text("Crear carpeta"),
             ),
 
             ElevatedButton(
               onPressed: () {
-                createJsonFile("$dir/prueba.txt", "Lorem ipsum");
+                FileManager.createFile("$dir/prueba.txt", "Lorem ipsum");
               },
               child: Text('Crear y guardar archivo')
             ),
@@ -151,7 +154,7 @@ class PruebasFilePicker extends StatelessWidget {
 
             ElevatedButton(
                 onPressed: (){
-                  pickFile();
+                  FileManager.pickFile();
                 },
                 child: Text('Pick File')),
             
@@ -171,12 +174,19 @@ class PruebasFilePicker extends StatelessWidget {
 
             ElevatedButton(
               onPressed: () async {
-                saveFolders(folders);
+                FileManager.saveFolders(folders);
                 print("Folders: $folders \n Persistencia: ");
-                final List<String> f = await loadFolders();
+                final List<String> f = await FileManager.loadFolders();
                 print(f);
               },
               child: Text("Guardar carpetas"),
+            ),
+
+            ElevatedButton(
+                onPressed: () async{
+
+                },
+                child: Text("Carpetas principales")
             ),
 
           ],
@@ -382,68 +392,35 @@ void loginPopUp(BuildContext context){
 
 void registerPopUp(BuildContext context) {}
 
-//Plan de gestión de archivos (crear una clase para ello y tenerlo separado)
+//_________________________________________________________________________________________________________________________Cambiar los placeholder
+void createMainFiles (Directory dir, String graphName) async{
+  //crear la carpeta principal
+  FileManager.createFolder(dir.path, graphName);
+  Directory graphDir = Directory("${dir.path}/$graphName");
 
-//Crear metodo pickFolder para escoger sitio de guardado
+  //Crear los contenidos de la carpeta
+  FileManager.createFolder(graphDir.path, "nodes}");
+  Directory genericNodeDir = Directory("${graphDir.path}/nodes}");
+  NodeEntity n1 = new NodeEntity(id: '0001', title: 'Push Me', x: 5, y: 0, filePath: "${genericNodeDir.path}/Push ME");
+  NodeEntity n2 = new NodeEntity(id: '0002', title: 'Welcome', x: -5, y: 0, filePath: "${genericNodeDir.path}/Welcome");
+  FileManager.createFile("${genericNodeDir.path}/${n1.title}.txt", "content");
+  FileManager.createFile("${genericNodeDir.path}/${n2.title}.txt", "content");
+  FileManager.createFile("$dir/$graphName.json", "content");
+  //AÑADIR IMAGEN
 
-//Escoge un directorio por pantalla y retorna su dirección
-Future<String?> pickFolder() async {
-  String? folder = await FilePicker.platform.getDirectoryPath();
-
-  if (folder != null) {
-    print("Carpeta seleccionada: $folder");
-  }
-
-  return folder;
+  //AÑADIR AL GRAFO
 }
 
-//Crea una carpeta en una dirección vaultPath con el nombre escogido folderName
-void createFolder(String vaultPath, String folderName) {
-  final dir = Directory('$vaultPath/$folderName');
-  if (!dir.existsSync()) {
-    dir.createSync(recursive: true);
-  }
+NodeEntity genNode (String name, Directory dir, String content){
+  Directory nodeDir = Directory("${dir.path}/nodes}");
+  FileManager.createFile("$nodeDir.path/name.txt",content);
+  NodeEntity n = new NodeEntity(id: "", title: name, x: 1, y: 1, filePath: "$nodeDir.path/name.txt"); //PROBLEMA CON EL ID y las posiciones___________________________________________
+  return n;
 }
 
-//Crear archivo json y carpeta dentro de la carpeta escogida
+void genEdge (){
 
-//Crea un archivo en la direccion path con un contenido content
-Future<void> createJsonFile(String path, String content) async {
-  File file = File(path);
-  await file.writeAsString(content);
 }
-
-//Selecciona por pantalla un archivo y retorna su dirección
-Future<void> pickFile() async {
-  FilePickerResult? result = await FilePicker.platform.pickFiles();
-
-  if (result != null) {
-    File file = File(result.files.single.path!);
-  } else {
-    // Usuario canceló la selección
-  }
-}
-
-//Metodo de creación de txt para los nodos
-//Metodo para borrar los archivos
-//Olvidar -> quitar del registro de la app, se tendria que usar pickFolder para recordar
-
-//IMPORTANTE __________________
-//Metodo de llamada y recepción de texto con Google colab
-//NOTA: la conexión con la IA será local descargando el modelo de huggingface y el código diseñado
-
-//PERSISTENCIA----------------------------------------------
-
-Future<void> saveFolders(List<String> folders) async {
-  final saves = await SharedPreferences.getInstance();
-  await saves.setStringList('folders', folders);
-}
-
-Future<List<String>> loadFolders() async {
-  final saves = await SharedPreferences.getInstance();
-  return saves.getStringList('folders') ?? [];
-}
-
 
 class CreateVault extends StatelessWidget{
   @override
