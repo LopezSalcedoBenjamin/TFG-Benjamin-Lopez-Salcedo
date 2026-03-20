@@ -3,8 +3,8 @@ import 'package:file_picker/file_picker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FileManager {
-  //Plan de gestión de archivos (crear una clase para ello y tenerlo separado)
-  //Crear metodo pickFolder para escoger sitio de guardado
+
+  //GESTION DE ARCHIVOS Y CARPETAS ______________________________________________________
 
   //Escoge un directorio por pantalla y retorna su dirección
   static Future<String?> pickFolder() async {
@@ -28,8 +28,8 @@ class FileManager {
   //Crear archivo json y carpeta dentro de la carpeta escogida
 
   //Crea un archivo en la direccion path con un contenido content
-  static Future<void> createFile(String path, String content) async {
-    File file = File(path);
+  static Future<void> createFile(String path, String content, String name) async {
+    File file = File("$path/$name");
     await file.writeAsString(content);
   }
 
@@ -43,6 +43,8 @@ class FileManager {
       // Usuario canceló la selección
     }
   }
+
+  //Selecciona por pantalla un archivo y lo borra
   static Future<void> deleteFile(File file) async {
     bool confirm = false;
 
@@ -55,6 +57,7 @@ class FileManager {
     }
   }
 
+  //Selecciona por pantalla un directorio y lo borra
   static Future<void> deleteDirectory(Directory dir) async {
     bool confirm = false;
 
@@ -67,15 +70,20 @@ class FileManager {
     }
   }
 
+  static Future<void> copyImage(File img, String path) async {
+    try{
+      final destination = "$path/logo.png";
+      await img.copy(destination);
+    }catch(e){
+      print("error al copiar imagen");
+    }
+  }
+
   //Metodo de creación de txt para los nodos
   //Metodo para borrar los archivos
   //Olvidar -> quitar del registro de la app, se tendria que usar pickFolder para recordar
 
-  //IMPORTANTE __________________
-  //Metodo de llamada y recepción de texto con Google colab
-  //NOTA: la conexión con la IA será local descargando el modelo de huggingface y el código diseñado
-
-  //PERSISTENCIA----------------------------------------------
+  //PERSISTENCIA ______________________________________________________
   //To do: Olvidar -> quitar del registro de la app, se tendria que usar pickFolder para recordar
   //Done:  Guardar y cargar
 
@@ -88,5 +96,9 @@ class FileManager {
     final saves = await SharedPreferences.getInstance();
     return saves.getStringList('folders') ?? [];
   }
+
+//IMPORTANTE __________________
+//Metodo de llamada y recepción de texto con Google colab
+//NOTA: la conexión con la IA será local descargando el modelo de huggingface y el código diseñado
 
 }

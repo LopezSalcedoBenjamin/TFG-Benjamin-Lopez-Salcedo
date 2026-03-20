@@ -35,7 +35,6 @@ void main (){
   EdgeEntity e1 = new EdgeEntity(from: 'hola', to: 'adios', type: 'saludo');
   GraphEntity g = new GraphEntity(nodes: [n, n2, n3], edges: [e1]);
 
-
   print(g.toJson());
 }
 

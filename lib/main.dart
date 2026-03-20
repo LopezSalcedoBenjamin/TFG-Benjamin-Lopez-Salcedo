@@ -7,9 +7,11 @@ import 'package:file_picker/file_picker.dart';
 
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/app.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/domain/entities/node_entity.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/main_menu.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_screenutil/flutter_screenutil.dart';
 
-import 'file_Manager.dart';
+import 'features/graph/presentation/widgets/file_Manager.dart';
 
 void main() {
   runApp(const NiaApp());
@@ -21,24 +23,26 @@ class NiaApp extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
+    return ScreenUtilInit(
+      designSize: Size(390, 844),
+      minTextAdapt: true,
+      splitScreenMode: true,
+      builder: (context, child){
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
 
-      //RUTA INICIAL
-      initialRoute:  '/',
+          //RUTA INICIAL
+          initialRoute:  '/',
 
-      //Definición de rutas
-      routes: {
-        '/': (context) => HomePage(), //Menú inicial de NIA
-        '/CreateVault': (context) => CreateVault(), //Menú de creación de grafos
-        '/ManageVaults': (context) => ManageVault(),
-      },
-      /*title: 'Flutter Demo',
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.cyanAccent),
-      ),
-      home: const MyHomePage(title: 'Flutter Demo Home Page'),*/
+          //Definición de rutas
+          routes: {
+            '/': (context) => HomePage(), //Menú inicial de NIA
+            '/CreateVault': (context) => CreateVault(), //Menú de creación de grafos
+            '/ManageVaults': (context) => ManageVault(),
+          },
 
+        );
+      }
     );
   }
 }
@@ -93,6 +97,15 @@ class _HomePageState extends State<HomePage> {
               child: Text("FilePicker Test"),
             ),
 
+            ElevatedButton(
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (c) => MainMenu())
+                  );
+                },
+                child: Text('MainMenu')),
+
           ],
         ),
       ),
@@ -145,7 +158,7 @@ class PruebasFilePicker extends StatelessWidget {
 
             ElevatedButton(
               onPressed: () {
-                FileManager.createFile("$dir/prueba.txt", "Lorem ipsum");
+                FileManager.createFile("$dir", "Lorem ipsum", "prueba.txt");
               },
               child: Text('Crear y guardar archivo')
             ),
@@ -403,9 +416,9 @@ void createMainFiles (Directory dir, String graphName) async{
   Directory genericNodeDir = Directory("${graphDir.path}/nodes}");
   NodeEntity n1 = new NodeEntity(id: '0001', title: 'Push Me', x: 5, y: 0, filePath: "${genericNodeDir.path}/Push ME");
   NodeEntity n2 = new NodeEntity(id: '0002', title: 'Welcome', x: -5, y: 0, filePath: "${genericNodeDir.path}/Welcome");
-  FileManager.createFile("${genericNodeDir.path}/${n1.title}.txt", "content");
-  FileManager.createFile("${genericNodeDir.path}/${n2.title}.txt", "content");
-  FileManager.createFile("$dir/$graphName.json", "content");
+  FileManager.createFile(genericNodeDir.path, "content", "${n1.title}.txt");
+  FileManager.createFile(genericNodeDir.path, "content", "${n2.title}.txt");
+  FileManager.createFile(dir.path, "content", "$graphName.json");
   //AÑADIR IMAGEN
 
   //AÑADIR AL GRAFO
@@ -413,7 +426,7 @@ void createMainFiles (Directory dir, String graphName) async{
 
 NodeEntity genNode (String name, Directory dir, String content){
   Directory nodeDir = Directory("${dir.path}/nodes}");
-  FileManager.createFile("$nodeDir.path/name.txt",content);
+  FileManager.createFile(nodeDir.path, content, "$name.txt");
   NodeEntity n = new NodeEntity(id: "", title: name, x: 1, y: 1, filePath: "$nodeDir.path/name.txt"); //PROBLEMA CON EL ID y las posiciones___________________________________________
   return n;
 }
