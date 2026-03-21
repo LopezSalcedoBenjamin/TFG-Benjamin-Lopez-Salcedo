@@ -87,14 +87,23 @@ class FileManager {
   //To do: Olvidar -> quitar del registro de la app, se tendria que usar pickFolder para recordar
   //Done:  Guardar y cargar
 
-  static Future<void> saveFolders(List<String> folders) async {
+  static Future<void> saveFolders(String path) async {
     final saves = await SharedPreferences.getInstance();
-    await saves.setStringList('folders', folders);
+    final list = saves.getStringList('saved_graphs') ?? [];
+    if(!list.contains(path)) list.add(path);
+    await saves.setStringList('saved_graphs', list);
   }
 
   static Future<List<String>> loadFolders() async {
     final saves = await SharedPreferences.getInstance();
-    return saves.getStringList('folders') ?? [];
+    return saves.getStringList('saved_graphs') ?? [];
+  }
+
+  static Future<void> removeFolders(String path) async {
+    final saves = await SharedPreferences.getInstance();
+    final list = saves.getStringList('saved_graphs') ?? [];
+    list.remove(path);
+    await saves.setStringList('saved_graphs', list);
   }
 
 //IMPORTANTE __________________

@@ -44,7 +44,7 @@ class _LogoPickerState extends State<LogoPicker>{
         child: _image!=null
           ? ClipRRect(
             borderRadius: BorderRadius.circular(10.r),
-            child: Image.file(_image!, fit: BoxFit.cover, width: 130.w, height: 130.h,),
+            child: Image.file(_image!, fit: BoxFit.cover, width: 130.w, height: 130.h, alignment: Alignment.center,),
           )
           : Column(
             mainAxisAlignment: MainAxisAlignment.center,

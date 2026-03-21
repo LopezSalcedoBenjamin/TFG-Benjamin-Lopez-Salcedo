@@ -121,7 +121,6 @@ class _HomePageState extends State<HomePage> {
 class PruebasFilePicker extends StatelessWidget {
 
   String? dir = "";
-  List<String> folders = [];
 
   @override
   Widget build(BuildContext context) {
@@ -142,9 +141,6 @@ class PruebasFilePicker extends StatelessWidget {
               onPressed: () async {
                 dir = await FileManager.pickFolder();
                 print("Carpeta seleccionada: $dir");
-                //if (folders.contains(dir)==false) folders.add(dir!);
-                folders.add(dir!);
-                print(folders);
               },
               child: Text("Escoger carpeta"),
             ),
@@ -187,8 +183,8 @@ class PruebasFilePicker extends StatelessWidget {
 
             ElevatedButton(
               onPressed: () async {
-                FileManager.saveFolders(folders);
-                print("Folders: $folders \n Persistencia: ");
+                FileManager.saveFolders(dir!);
+                print("Path: $dir \n Persistencia: ");
                 final List<String> f = await FileManager.loadFolders();
                 print(f);
               },

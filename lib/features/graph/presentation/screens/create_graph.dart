@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/main_menu.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/file_Manager.dart';
 import '../../../../consts.dart';
 import '../../../../data/datasources/graph_file_datasource.dart';
@@ -110,7 +111,7 @@ class _CreateGraphState extends State<CreateGraph>{
 
                           TextField(
                             controller: _nameGraphController,
-                            style: TextStyle(color: Colors.white54),
+                            style: TextStyle(color: Colors.white70),
                             decoration: InputDecoration(
                               hintText: "Inserte nombre...",
                               hintStyle: TextStyle(color: Colors.white54, fontSize: 15.sp),
@@ -142,14 +143,14 @@ class _CreateGraphState extends State<CreateGraph>{
                                 setState(() => _locGraph = folder );
                               },
                               style: ElevatedButton.styleFrom(
+                                  elevation: 0,
                                   backgroundColor: button1,
                                   minimumSize: Size(double.infinity, 50.r),
                                   shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(5.r))
                               ),
                               child: Text(
                                 "Escoge",
-                                style: TextStyle(color: Colors.white54, fontSize: 15.sp, fontWeight: FontWeight.bold),
-                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(color: Colors.white70, fontSize: 16.sp, fontWeight: FontWeight.bold),
                               )
                           ),
 
@@ -172,8 +173,14 @@ class _CreateGraphState extends State<CreateGraph>{
                       padding: EdgeInsets.symmetric(horizontal: 60.w, vertical: 0.h),
                       child:
                       ElevatedButton(
-                          onPressed: (){
-                            createGraph(_nameGraphController.text, _locGraph!, _imgLogo!);
+                          onPressed: () async {
+                            await createGraph(_nameGraphController.text, _locGraph!, _imgLogo!);
+                            await FileManager.saveFolders('$_locGraph/${_nameGraphController.text}');
+                            if (!mounted) return;
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (c) => MainMenu())             //CAMBIAR A SHOWGRAPH_________________________________________________________
+                            );
                           },
                           style: ElevatedButton.styleFrom(
                               backgroundColor: mainPurple,
@@ -184,29 +191,6 @@ class _CreateGraphState extends State<CreateGraph>{
                       ),
 
                     ),
-
-                    /*
-
-                SizedBox(height: 25.h,),
-
-                ElevatedButton(
-                    onPressed: () async {
-                      File f = File('$_locGraph/${_nameGraphController.text}/${_nameGraphController.text}.json');
-                      print(_locGraph);
-                      print(_nameGraphController.text);
-                      print(f.path);
-                      String s = await f.readAsString();
-                      print("content: $s");
-                    },
-                    style: ElevatedButton.styleFrom(
-                        backgroundColor: mainPurple,
-                        minimumSize: Size(double.infinity, 50),
-                        shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(5))
-                    ),
-                    child: Text("prueba content",style: TextStyle(color: Colors.white, fontSize: 25, fontWeight: FontWeight.bold),)
-                ),
-
-                */
 
                   ]
               ),

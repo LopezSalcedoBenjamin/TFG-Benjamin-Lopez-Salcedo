@@ -9,11 +9,12 @@ import '../../features/graph/presentation/widgets/file_Manager.dart';
 
 Future<void> createGraph(String name, String dir, File logo) async {
   FileManager.createFolder(dir, name);
-  FileManager.createFolder("$dir/$name", "nodes");
-  FileManager.copyImage(logo, "$dir/$name");
+  final String graphPath = "$dir/$name";
+  FileManager.createFolder(graphPath, "nodes");
+  FileManager.copyImage(logo, graphPath);
 
   GraphEntity g = GraphEntity(nodes: [], edges: []);
-  FileManager.createFile("$dir/$name", jsonEncode(g.toJson()), "$name.json");
+  FileManager.createFile(graphPath, jsonEncode(g.toJson()), "$name.json");
 }
 
 void saveGraph (GraphEntity g){

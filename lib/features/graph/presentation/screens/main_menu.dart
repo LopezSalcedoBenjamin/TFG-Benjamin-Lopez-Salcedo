@@ -1,10 +1,12 @@
 
+import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/consts.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/create_graph.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/file_Manager.dart';
 
 class MainMenu extends StatefulWidget {
   @override
@@ -16,6 +18,19 @@ class MainMenu extends StatefulWidget {
 }
 
 class _MainMenuState extends State<MainMenu>{
+
+  List<String> _graphs = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadGraphs();
+  }
+
+  Future<void> _loadGraphs() async {
+    final savedGraphs = await FileManager.loadFolders();
+    setState(() => _graphs = savedGraphs);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -99,9 +114,10 @@ class _MainMenuState extends State<MainMenu>{
                               );
                             },
                             style: ElevatedButton.styleFrom(
-                              backgroundColor: button1,
-                              minimumSize: Size(double.infinity, 50.r),
-                              shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(5.r))
+                                elevation: 0,
+                                backgroundColor: button1,
+                                minimumSize: Size(double.infinity, 50.r),
+                                shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(5.r))
                             ),
                             child: Row(
                               mainAxisAlignment: MainAxisAlignment.center,
@@ -122,8 +138,14 @@ class _MainMenuState extends State<MainMenu>{
                         SizedBox(height: 15.h,),
 
                         ElevatedButton(
-                            onPressed: (){},
+                            onPressed: () async {
+                              final String? folderGraph = await FileManager.pickFolder();
+                              if (folderGraph == null) return;
+                              await FileManager.saveFolders(folderGraph);
+                              await _loadGraphs();
+                            },
                             style: ElevatedButton.styleFrom(
+                                elevation: 0,
                                 backgroundColor: button1,
                                 minimumSize: Size(double.infinity, 50.r),
                                 shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(5.r))
@@ -165,7 +187,8 @@ class _MainMenuState extends State<MainMenu>{
                           ElevatedButton(
                               onPressed: (){},
                               style: ElevatedButton.styleFrom(
-                                  backgroundColor: button1,
+                                  elevation: 0,
+                                  backgroundColor: button3,
                                   minimumSize: Size(double.infinity, 50.r),
                                   shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(5.r))
                               ),
@@ -188,17 +211,63 @@ class _MainMenuState extends State<MainMenu>{
                       )
                   ),
 
-                  /*SizedBox(
-                    height: 90,
-                    child: ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      padding: const EdgeInsets.symmetric(horizontal: 16),
-                      itemCount: ,
-                      itemBuilder: (context,index){
+                  SizedBox(height: 15.h,),
 
+                  SizedBox(
+                    height: 250.h,
+                    child: ListView.builder(
+                      shrinkWrap: true,
+                      physics: BouncingScrollPhysics(),
+                      padding: EdgeInsets.symmetric(horizontal: 60.w),
+                      itemCount: _graphs.length,
+                      itemBuilder: (context,index){
+                        return Padding(
+                          padding: EdgeInsets.only(bottom: 10.h),
+                          child: Row(
+                              children: [
+                                Container(
+                                  width: 70.w,
+                                  height: 70.h,
+                                  decoration: BoxDecoration(
+                                    color: button1,
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    border: Border.all(color: Colors.white24, width: 2.w),
+                                  ),
+                                  child: File("${_graphs[index]}/logo.png").existsSync()
+                                    ? ClipRRect(
+                                      borderRadius: BorderRadius.circular(10.r),
+                                      child: Image.file(
+                                        File("${_graphs[index]}/logo.png"),
+                                        fit: BoxFit.cover,
+                                        width: 70.w, height: 70.h,
+                                        alignment: Alignment.center,
+                                      ),
+                                    )
+                                      : Icon(Icons.image_not_supported, size: 40.r, color: Colors.white54),
+                                ),
+
+                                SizedBox(width: 10.w,),
+
+                                Expanded(child: ElevatedButton(
+                                  onPressed: (){},
+                                  style: ElevatedButton.styleFrom(
+                                      elevation: 0,
+                                      backgroundColor: button3,
+                                      minimumSize: Size(double.infinity, 50.r),
+                                      shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(5.r))
+                                  ),
+                                  child: Text(
+                                    _graphs[index].split("/").last,
+                                    style: TextStyle(color: Colors.white, fontSize: 22.sp),
+                                  ),
+                                ),
+                                )
+                              ]
+                          )
+                        );
                       },
                     ),
-                  ),*/
+                  ),
 
                 ],
               )
