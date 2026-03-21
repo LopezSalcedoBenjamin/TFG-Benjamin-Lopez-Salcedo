@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/consts.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/create_graph.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/alert_manager.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/file_Manager.dart';
 
 class MainMenu extends StatefulWidget {
@@ -30,6 +31,14 @@ class _MainMenuState extends State<MainMenu>{
   Future<void> _loadGraphs() async {
     final savedGraphs = await FileManager.loadFolders();
     setState(() => _graphs = savedGraphs);
+  }
+
+  Future<bool> _tryGraph(String path) async{
+    bool verify = false;
+    if(File("$path/${path.split("/").last}.json") != null && Directory("$path/nodes") != null){
+      verify = true;
+    }
+    return verify;
   }
 
   @override
@@ -140,7 +149,13 @@ class _MainMenuState extends State<MainMenu>{
                         ElevatedButton(
                             onPressed: () async {
                               final String? folderGraph = await FileManager.pickFolder();
+
                               if (folderGraph == null) return;
+                              if (await _tryGraph(folderGraph)){
+                                alertHelper.showSnakbar(context, 'La carpeta "${folderGraph.split("/").last}" no es válida o no contiene la estructura del grafo', redAlert, Colors.white);
+                                return;
+                              }
+
                               await FileManager.saveFolders(folderGraph);
                               await _loadGraphs();
                             },
@@ -181,7 +196,7 @@ class _MainMenuState extends State<MainMenu>{
                   SizedBox(height: 15.h,),
 
                   Padding(
-                      padding:  EdgeInsets.symmetric(horizontal: 70.w),
+                      padding:  EdgeInsets.symmetric(horizontal: 60.w),
                       child: Column(
                         children: [
                           ElevatedButton(

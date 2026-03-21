@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/main_menu.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/alert_manager.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/file_Manager.dart';
 import '../../../../consts.dart';
 import '../../../../data/datasources/graph_file_datasource.dart';
@@ -23,6 +24,9 @@ class _CreateGraphState extends State<CreateGraph>{
 
   File? _imgLogo;
   String? _locGraph;
+
+  Color _hintNameColor = Colors.white54;
+  Color _locButtonColor = Colors.white70;
 
   final TextEditingController _nameGraphController = TextEditingController();
 
@@ -110,11 +114,12 @@ class _CreateGraphState extends State<CreateGraph>{
                           Text("Nombre del grafo", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold),),
 
                           TextField(
+                            onTap: () {setState(() => _hintNameColor = Colors.white54);},
                             controller: _nameGraphController,
                             style: TextStyle(color: Colors.white70),
                             decoration: InputDecoration(
                               hintText: "Inserte nombre...",
-                              hintStyle: TextStyle(color: Colors.white54, fontSize: 15.sp),
+                              hintStyle: TextStyle(color: _hintNameColor, fontSize: 15.sp),
                               filled: true,
                               fillColor: button1,
                               border: OutlineInputBorder(
@@ -133,7 +138,7 @@ class _CreateGraphState extends State<CreateGraph>{
                             Text("El grafo se guardará en:", style: TextStyle(color: Colors.white70, fontSize: 14.sp),),
                             Text(_locGraph!, style: TextStyle(color: Colors.blue, fontSize: 14.sp),),
                           ]
-                          else Text("Escoge una carpeta para guardar el grafo", style: TextStyle(color: Colors.white70, fontSize: 14.sp),),
+                          else Text("Escoge una carpeta para guardar el grafo", style: TextStyle(color: _locButtonColor, fontSize: 14.sp),),
 
                           SizedBox(height: 10.h,),
 
@@ -141,6 +146,7 @@ class _CreateGraphState extends State<CreateGraph>{
                               onPressed: () async {
                                 final folder = _locGraph = await FileManager.pickFolder();
                                 setState(() => _locGraph = folder );
+                                setState(() => _locButtonColor = Colors.white70 );
                               },
                               style: ElevatedButton.styleFrom(
                                   elevation: 0,
@@ -174,13 +180,35 @@ class _CreateGraphState extends State<CreateGraph>{
                       child:
                       ElevatedButton(
                           onPressed: () async {
-                            await createGraph(_nameGraphController.text, _locGraph!, _imgLogo!);
+                            if(_nameGraphController.text.isEmpty && _locGraph == null){
+                              setState(() => _hintNameColor = redAlert );
+                              setState(() => _locButtonColor = redAlert );
+                              alertHelper.showSnakbar(context, "Por favor seleccione NOMBRE y una LOCALIZACIÓN", redAlert, Colors.white);
+                              return;
+                            }
+                            if(_nameGraphController.text.isEmpty){
+                              setState(() => _hintNameColor = redAlert );
+                              alertHelper.showSnakbar(context, "Por favor seleccione un NOMBRE para el grafo", redAlert, Colors.white);
+                              return;
+                            }
+                            if(_locGraph == null){
+                              setState(() => _locButtonColor = redAlert );
+                              alertHelper.showSnakbar(context, "Por favor selecciona una LOCALIZACIÓN para el grafo", redAlert, Colors.white);
+                              return;
+                            }
+
+                            await createGraph(_nameGraphController.text, _locGraph!, _imgLogo);
                             await FileManager.saveFolders('$_locGraph/${_nameGraphController.text}');
                             if (!mounted) return;
+
                             Navigator.push(
                                 context,
                                 MaterialPageRoute(builder: (c) => MainMenu())             //CAMBIAR A SHOWGRAPH_________________________________________________________
                             );
+
+                            if(_imgLogo == null) {
+                              alertHelper.showSnakbar(context, "Se ha seleccionado una imagen por defecto", whiteBack, Colors.black);
+                            }
                           },
                           style: ElevatedButton.styleFrom(
                               backgroundColor: mainPurple,

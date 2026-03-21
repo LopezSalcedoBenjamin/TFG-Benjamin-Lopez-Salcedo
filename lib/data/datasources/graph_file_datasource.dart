@@ -1,17 +1,21 @@
 
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 
 import '../../domain/entities/graph_entity.dart';
 import '../../domain/entities/node_entity.dart';
 import '../../domain/entities/edge_entity.dart';
 import '../../features/graph/presentation/widgets/file_Manager.dart';
 
-Future<void> createGraph(String name, String dir, File logo) async {
+Future<void> createGraph(String name, String dir, File? logo) async {
+
   FileManager.createFolder(dir, name);
   final String graphPath = "$dir/$name";
   FileManager.createFolder(graphPath, "nodes");
-  FileManager.copyImage(logo, graphPath);
+  if (logo != null) {
+    FileManager.copyImage(logo, graphPath);
+  }
 
   GraphEntity g = GraphEntity(nodes: [], edges: []);
   FileManager.createFile(graphPath, jsonEncode(g.toJson()), "$name.json");
