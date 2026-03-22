@@ -87,23 +87,42 @@ class FileManager {
   //To do: Olvidar -> quitar del registro de la app, se tendria que usar pickFolder para recordar
   //Done:  Guardar y cargar
 
+  static const _keyFavGraphs = 'favorite_graphs';
+  static const _KeyGraphs = 'saved_graphs';
+
   static Future<void> saveFolders(String path) async {
     final saves = await SharedPreferences.getInstance();
-    final list = saves.getStringList('saved_graphs') ?? [];
+    final list = saves.getStringList(_KeyGraphs) ?? [];
     if(!list.contains(path)) list.add(path);
-    await saves.setStringList('saved_graphs', list);
+    await saves.setStringList(_KeyGraphs, list);
   }
 
   static Future<List<String>> loadFolders() async {
     final saves = await SharedPreferences.getInstance();
-    return saves.getStringList('saved_graphs') ?? [];
+    return saves.getStringList(_KeyGraphs) ?? [];
   }
 
   static Future<void> removeFolders(String path) async {
     final saves = await SharedPreferences.getInstance();
-    final list = saves.getStringList('saved_graphs') ?? [];
+    final list = saves.getStringList(_KeyGraphs) ?? [];
     list.remove(path);
-    await saves.setStringList('saved_graphs', list);
+    await saves.setStringList(_KeyGraphs, list);
+  }
+
+  static Future<List<String>> loadFavorites() async {
+    final favs = await SharedPreferences.getInstance();
+    return favs.getStringList(_keyFavGraphs) ?? [];
+  }
+
+  static Future<void> toggleFavorites(String path) async {
+    final favs = await SharedPreferences.getInstance();
+    final list = favs.getStringList(_keyFavGraphs) ?? [];
+    if(list.contains(path)){
+      list.remove(path);
+    } else {
+      list.add(path);
+    }
+    await favs.setStringList(_keyFavGraphs, list);
   }
 
 //IMPORTANTE __________________

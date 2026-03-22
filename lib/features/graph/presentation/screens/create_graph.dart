@@ -2,6 +2,7 @@ import 'dart:io';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/main_menu.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/alert_manager.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/file_Manager.dart';
@@ -117,7 +118,14 @@ class _CreateGraphState extends State<CreateGraph>{
                             onTap: () {setState(() => _hintNameColor = Colors.white54);},
                             controller: _nameGraphController,
                             style: TextStyle(color: Colors.white70),
+                            maxLength: 25,
+                            maxLengthEnforcement: MaxLengthEnforcement.enforced,
                             decoration: InputDecoration(
+                              counterStyle: TextStyle(
+                                color: _nameGraphController.text.length > 25 ? redAlert : Colors.white54,
+                                fontSize: 12.sp,
+                                fontWeight: FontWeight.bold,
+                              ),
                               hintText: "Inserte nombre...",
                               hintStyle: TextStyle(color: _hintNameColor, fontSize: 15.sp),
                               filled: true,
@@ -128,10 +136,15 @@ class _CreateGraphState extends State<CreateGraph>{
                               ),
 
                               contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-                            ),
-                          ),
 
-                          SizedBox(height: 20.h,),
+                            ),
+
+                            cursorColor: _nameGraphController.text.length >= 25 ? redAlert : Colors.white,
+                            onChanged: (value) {
+                              setState(() {});
+                            },
+
+                          ),
 
                           Text("Localización", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold),),
                           if (_locGraph != null) ...[

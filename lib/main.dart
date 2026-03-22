@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:file_picker/file_picker.dart';
@@ -13,7 +14,13 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 
 import 'features/graph/presentation/widgets/file_Manager.dart';
 
-void main() {
+void main() async{
+  //Bloquea la aplicación a uso vertical
+  WidgetsFlutterBinding.ensureInitialized();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+  ]);
+
   runApp(const NiaApp());
 }
 

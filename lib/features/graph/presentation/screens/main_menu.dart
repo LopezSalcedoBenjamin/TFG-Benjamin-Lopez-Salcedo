@@ -21,6 +21,8 @@ class MainMenu extends StatefulWidget {
 class _MainMenuState extends State<MainMenu>{
 
   List<String> _graphs = [];
+  List<String> _favorites = [];
+  final int itemSize = 70;
 
   @override
   void initState() {
@@ -29,13 +31,21 @@ class _MainMenuState extends State<MainMenu>{
   }
 
   Future<void> _loadGraphs() async {
-    final savedGraphs = await FileManager.loadFolders();
-    setState(() => _graphs = savedGraphs);
+    final graphs = await FileManager.loadFolders();
+    final favorites = await FileManager.loadFavorites();
+    final sortedGraphs = [
+      ...favorites.where((f) => graphs.contains(f)),
+      ...graphs.where((g) => !favorites.contains(g))
+    ];
+    setState((){
+      _graphs = sortedGraphs;
+      _favorites = favorites;
+    });
   }
 
   Future<bool> _tryGraph(String path) async{
     bool verify = false;
-    if(File("$path/${path.split("/").last}.json") != null && Directory("$path/nodes") != null){
+    if(await File("$path/${path.split("/").last}.json").exists() && await Directory("$path/nodes").exists()){
       verify = true;
     }
     return verify;
@@ -149,11 +159,14 @@ class _MainMenuState extends State<MainMenu>{
                         ElevatedButton(
                             onPressed: () async {
                               final String? folderGraph = await FileManager.pickFolder();
-
                               if (folderGraph == null) return;
-                              if (await _tryGraph(folderGraph)){
+
+                              if (await _tryGraph(folderGraph) == false){
                                 alertHelper.showSnakbar(context, 'La carpeta "${folderGraph.split("/").last}" no es válida o no contiene la estructura del grafo', redAlert, Colors.white);
                                 return;
+                              }
+                              if (await File("$folderGraph/logo.png").exists() == false) {
+                                alertHelper.showSnakbar(context, 'Carpeta añadida sin archivo "logo.png", puedes añadir un logo más tarde', whiteBack, Colors.black);
                               }
 
                               await FileManager.saveFolders(folderGraph);
@@ -233,7 +246,7 @@ class _MainMenuState extends State<MainMenu>{
                     child: ListView.builder(
                       shrinkWrap: true,
                       physics: BouncingScrollPhysics(),
-                      padding: EdgeInsets.symmetric(horizontal: 60.w),
+                      padding: EdgeInsets.symmetric(horizontal: 50.w),
                       itemCount: _graphs.length,
                       itemBuilder: (context,index){
                         return Padding(
@@ -241,11 +254,11 @@ class _MainMenuState extends State<MainMenu>{
                           child: Row(
                               children: [
                                 Container(
-                                  width: 70.w,
-                                  height: 70.h,
+                                  width: itemSize.w,
+                                  height: itemSize.h,
                                   decoration: BoxDecoration(
                                     color: button1,
-                                    borderRadius: BorderRadius.circular(12.r),
+                                    borderRadius: BorderRadius.circular(10.r),
                                     border: Border.all(color: Colors.white24, width: 2.w),
                                   ),
                                   child: File("${_graphs[index]}/logo.png").existsSync()
@@ -254,7 +267,7 @@ class _MainMenuState extends State<MainMenu>{
                                       child: Image.file(
                                         File("${_graphs[index]}/logo.png"),
                                         fit: BoxFit.cover,
-                                        width: 70.w, height: 70.h,
+                                        width: itemSize.w, height: itemSize.h,
                                         alignment: Alignment.center,
                                       ),
                                     )
@@ -263,20 +276,103 @@ class _MainMenuState extends State<MainMenu>{
 
                                 SizedBox(width: 10.w,),
 
-                                Expanded(child: ElevatedButton(
-                                  onPressed: (){},
-                                  style: ElevatedButton.styleFrom(
-                                      elevation: 0,
-                                      backgroundColor: button3,
-                                      minimumSize: Size(double.infinity, 50.r),
-                                      shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(5.r))
-                                  ),
-                                  child: Text(
-                                    _graphs[index].split("/").last,
-                                    style: TextStyle(color: Colors.white, fontSize: 22.sp),
-                                  ),
+                                Expanded(
+                                    child: Container(
+                                      height: itemSize.h,
+                                      decoration: BoxDecoration(
+                                        borderRadius: BorderRadius.circular(15.r),
+                                        border: Border.all(color: Colors.white24, width: 2.w),
+                                      ),
+                                      child: Row(
+                                        children: [
+                                          Expanded(
+                                            child: ElevatedButton(
+                                              onPressed: (){},
+                                              style: ElevatedButton.styleFrom(
+                                                  elevation: 0,
+                                                  backgroundColor: button3,
+                                                  minimumSize: Size(double.infinity, double.infinity),
+                                                  alignment: Alignment.centerLeft,
+                                                  padding: EdgeInsets.all(18.r),
+                                                  shape: RoundedRectangleBorder(
+                                                      borderRadius: BorderRadius.only(
+                                                        topLeft: Radius.circular(12.r),
+                                                        bottomLeft: Radius.circular(12.r),
+                                                      )
+                                                  )
+                                              ),
+                                              child: Text(
+                                                _graphs[index].split("/").last.length > 25
+                                                    ? "${_graphs[index].split("/").last.substring(0, 25)}..."
+                                                    : _graphs[index].split("/").last,
+                                                style: TextStyle(color: Colors.white, fontSize: 15.sp),
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                          ),
+
+                                          SizedBox(
+                                            width: (itemSize/2).w,
+                                            child: Column(
+                                              children: [
+                                                Expanded(
+                                                  child: ElevatedButton(
+                                                      onPressed: () async {
+                                                        await FileManager.toggleFavorites(_graphs[index]);
+                                                        await _loadGraphs();
+                                                      },
+                                                      style: ElevatedButton.styleFrom(
+                                                          elevation: 0,
+                                                          backgroundColor: button1,
+                                                          minimumSize: Size.zero,
+                                                          padding: EdgeInsets.zero,
+                                                          fixedSize: Size((itemSize/2).h, (itemSize/2).h),
+                                                          shape: RoundedRectangleBorder(
+                                                            borderRadius: BorderRadius.only(
+                                                              topRight: Radius.circular(12.r),
+                                                            )
+                                                          )
+                                                      ),
+                                                      child: Icon(
+                                                          _favorites.contains(_graphs[index])
+                                                              ? Icons.auto_awesome
+                                                              : Icons.auto_awesome_outlined,
+                                                          size: 20.r,
+                                                          color: _favorites.contains(_graphs[index])
+                                                              ? Colors.amber
+                                                              : Colors.white54
+                                                      )
+                                                  ),
+                                                ),
+                                                Expanded(
+                                                  child: ElevatedButton(
+                                                      onPressed: (){
+
+                                                      },
+                                                      style: ElevatedButton.styleFrom(
+                                                          elevation: 0,
+                                                          backgroundColor: button1,
+                                                          minimumSize: Size.zero,
+                                                          padding: EdgeInsets.zero,
+                                                          fixedSize: Size((itemSize/2).h, (itemSize/2).h),
+                                                          shape: RoundedRectangleBorder(
+                                                              borderRadius: BorderRadius.only(
+                                                                bottomRight: Radius.circular(12.r),
+                                                              )
+                                                          )
+                                                      ),
+                                                      child: Icon(Icons.more_vert, size: 20.r, color: Colors.white54)
+                                                  ),
+                                                ),
+                                              ],
+                                            ),
+                                          ),
+
+                                        ],
+                                      ),
+                                    ),
                                 ),
-                                )
                               ]
                           )
                         );
