@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/consts.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/create_graph.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/manage_graph.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/alert_manager.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/file_Manager.dart';
 
@@ -162,11 +163,21 @@ class _MainMenuState extends State<MainMenu>{
                               if (folderGraph == null) return;
 
                               if (await _tryGraph(folderGraph) == false){
-                                alertHelper.showSnakbar(context, 'La carpeta "${folderGraph.split("/").last}" no es válida o no contiene la estructura del grafo', redAlert, Colors.white);
+                                AlertHelper.showSnakbar(
+                                    context,
+                                    'La carpeta "${folderGraph.split("/").last}" no es válida o no contiene la estructura del grafo',
+                                    5,
+                                    redAlert,
+                                    Colors.white);
                                 return;
                               }
                               if (await File("$folderGraph/logo.png").exists() == false) {
-                                alertHelper.showSnakbar(context, 'Carpeta añadida sin archivo "logo.png", puedes añadir un logo más tarde', whiteBack, Colors.black);
+                                AlertHelper.showSnakbar(
+                                    context,
+                                    'Carpeta añadida sin archivo "logo.png", puedes añadir un logo más tarde',
+                                    5,
+                                    backgroundWhite,
+                                    Colors.black);
                               }
 
                               await FileManager.saveFolders(folderGraph);
@@ -348,7 +359,10 @@ class _MainMenuState extends State<MainMenu>{
                                                 Expanded(
                                                   child: ElevatedButton(
                                                       onPressed: (){
-
+                                                        Navigator.push(
+                                                            context,
+                                                            MaterialPageRoute(builder: (c) => ManageGraph(graphPath: _graphs[index]))
+                                                        ).then((_) => _loadGraphs());
                                                       },
                                                       style: ElevatedButton.styleFrom(
                                                           elevation: 0,

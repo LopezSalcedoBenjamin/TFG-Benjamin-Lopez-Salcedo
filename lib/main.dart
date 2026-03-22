@@ -113,6 +113,26 @@ class _HomePageState extends State<HomePage> {
                 },
                 child: Text('MainMenu')),
 
+            ElevatedButton(
+              onPressed: () async {
+                final prefs = await SharedPreferences.getInstance();
+                final keys = prefs.getKeys();
+                for (String key in keys) {
+                  print('$key: ${prefs.get(key)}');
+                }
+              },
+              child: Text("Ver persistencia"),
+            ),
+
+            ElevatedButton(
+              onPressed: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.remove('saved_graphs');
+                await prefs.remove('favorite_graphs');
+                print("Listas limpiadas");
+              },
+              child: Text("Limpiar listas")),
+
           ],
         ),
       ),
@@ -154,7 +174,7 @@ class PruebasFilePicker extends StatelessWidget {
 
             ElevatedButton(
               onPressed: () {
-                FileManager.createFolder("$dir", "test");
+                FileManager.createDirectory("$dir", "test");
               },
               child: Text("Crear carpeta"),
             ),
@@ -411,11 +431,11 @@ void registerPopUp(BuildContext context) {}
 //_________________________________________________________________________________________________________________________Cambiar los placeholder
 void createMainFiles (Directory dir, String graphName) async{
   //crear la carpeta principal
-  FileManager.createFolder(dir.path, graphName);
+  FileManager.createDirectory(dir.path, graphName);
   Directory graphDir = Directory("${dir.path}/$graphName");
 
   //Crear los contenidos de la carpeta
-  FileManager.createFolder(graphDir.path, "nodes}");
+  FileManager.createDirectory(graphDir.path, "nodes}");
   Directory genericNodeDir = Directory("${graphDir.path}/nodes}");
   NodeEntity n1 = new NodeEntity(id: '0001', title: 'Push Me', x: 5, y: 0, filePath: "${genericNodeDir.path}/Push ME");
   NodeEntity n2 = new NodeEntity(id: '0002', title: 'Welcome', x: -5, y: 0, filePath: "${genericNodeDir.path}/Welcome");

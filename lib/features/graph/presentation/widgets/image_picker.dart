@@ -51,7 +51,7 @@ class _LogoPickerState extends State<LogoPicker>{
             children: [
               Icon(Icons.add_a_photo, size: 40.r, color: Colors.white54,),
               SizedBox(height: 8.h,),
-              Text("Añadir logo", style: TextStyle(color: Colors.white54, fontSize: 13.sp),)
+              Text("Añadir logo", style: TextStyle(color: Colors.white54, fontSize: 13.sp, fontWeight: FontWeight.bold))
             ],
           ),
       ),

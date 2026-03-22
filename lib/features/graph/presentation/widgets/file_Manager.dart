@@ -8,7 +8,10 @@ class FileManager {
 
   //Escoge un directorio por pantalla y retorna su dirección
   static Future<String?> pickFolder() async {
-    String? folder = await FilePicker.platform.getDirectoryPath();
+
+    String? folder = await FilePicker.platform.getDirectoryPath(
+      initialDirectory: '/storage/emulated/0/Documents',
+    );
 
     if (folder != null) {
       print("Carpeta seleccionada: $folder");
@@ -18,11 +21,27 @@ class FileManager {
   }
 
   //Crea una carpeta en una dirección vaultPath con el nombre escogido folderName
-  static void createFolder(String vaultPath, String folderName) {
+  static void createDirectory(String vaultPath, String folderName) {
     final dir = Directory('$vaultPath/$folderName');
     if (!dir.existsSync()) {
       dir.createSync(recursive: true);
     }
+  }
+
+  static Future<String> renameDirectory(String oldPath, String newName) async {
+    final dir = Directory(oldPath);
+    final path = oldPath.substring(0,oldPath.lastIndexOf('/'));
+    final newPath = '$path/$newName';
+    await dir.rename(newPath);
+    return newPath;
+  }
+
+  static Future<String> moveDirectory(String oldPath, String newLocation) async {
+    final dir = Directory(oldPath);
+    final dirName = oldPath.split('/').last;
+    final newPath = '$newLocation/$dirName';
+    await dir.rename(newPath);
+    return newPath;
   }
 
   //Crear archivo json y carpeta dentro de la carpeta escogida
@@ -31,6 +50,14 @@ class FileManager {
   static Future<void> createFile(String path, String content, String name) async {
     File file = File("$path/$name");
     await file.writeAsString(content);
+  }
+
+  static Future<String> renameFile(String oldPath, String newName) async {
+    final file = File(oldPath);
+    final path = oldPath.substring(0,oldPath.lastIndexOf('/'));
+    final newPath = '$path/$newName';
+    await file.rename(newPath);
+    return newPath;
   }
 
   //Selecciona por pantalla un archivo y retorna su dirección
@@ -46,28 +73,12 @@ class FileManager {
 
   //Selecciona por pantalla un archivo y lo borra
   static Future<void> deleteFile(File file) async {
-    bool confirm = false;
-
-    //Preguntar al usuario
-
-    if(confirm){
-      await file.delete();
-    }else{
-      //El usuario canceló la operación
-    }
+    await file.delete();
   }
 
   //Selecciona por pantalla un directorio y lo borra
   static Future<void> deleteDirectory(Directory dir) async {
-    bool confirm = false;
-
-    //Preguntar al usuario
-
-    if(confirm){
-      await dir.delete(recursive: true);
-    }else{
-      //El usuario canceló la operación
-    }
+    await dir.delete(recursive: true);
   }
 
   static Future<void> copyImage(File img, String path) async {
@@ -123,6 +134,11 @@ class FileManager {
       list.add(path);
     }
     await favs.setStringList(_keyFavGraphs, list);
+  }
+
+  static Future<void> purgeFromFavorites(String f) async {
+    final favorites = await FileManager.loadFavorites();
+    if(favorites.contains(f)) FileManager.toggleFavorites(f);
   }
 
 //IMPORTANTE __________________

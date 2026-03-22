@@ -10,9 +10,9 @@ import '../../features/graph/presentation/widgets/file_Manager.dart';
 
 Future<void> createGraph(String name, String dir, File? logo) async {
 
-  FileManager.createFolder(dir, name);
+  FileManager.createDirectory(dir, name);
   final String graphPath = "$dir/$name";
-  FileManager.createFolder(graphPath, "nodes");
+  FileManager.createDirectory(graphPath, "nodes");
   if (logo != null) {
     FileManager.copyImage(logo, graphPath);
   }

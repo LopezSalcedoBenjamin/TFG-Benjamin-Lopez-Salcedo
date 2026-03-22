@@ -8,7 +8,6 @@ import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presen
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/file_Manager.dart';
 import '../../../../consts.dart';
 import '../../../../data/datasources/graph_file_datasource.dart';
-import '../../../../domain/entities/graph_entity.dart';
 import '../widgets/image_picker.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -196,17 +195,17 @@ class _CreateGraphState extends State<CreateGraph>{
                             if(_nameGraphController.text.isEmpty && _locGraph == null){
                               setState(() => _hintNameColor = redAlert );
                               setState(() => _locButtonColor = redAlert );
-                              alertHelper.showSnakbar(context, "Por favor seleccione NOMBRE y una LOCALIZACIÓN", redAlert, Colors.white);
+                              AlertHelper.showSnakbar(context, "Por favor seleccione NOMBRE y una LOCALIZACIÓN", 3, redAlert, Colors.white);
                               return;
                             }
                             if(_nameGraphController.text.isEmpty){
                               setState(() => _hintNameColor = redAlert );
-                              alertHelper.showSnakbar(context, "Por favor seleccione un NOMBRE para el grafo", redAlert, Colors.white);
+                              AlertHelper.showSnakbar(context, "Por favor seleccione un NOMBRE para el grafo", 3, redAlert, Colors.white);
                               return;
                             }
                             if(_locGraph == null){
                               setState(() => _locButtonColor = redAlert );
-                              alertHelper.showSnakbar(context, "Por favor selecciona una LOCALIZACIÓN para el grafo", redAlert, Colors.white);
+                              AlertHelper.showSnakbar(context, "Por favor selecciona una LOCALIZACIÓN para el grafo", 3, redAlert, Colors.white);
                               return;
                             }
 
@@ -220,7 +219,7 @@ class _CreateGraphState extends State<CreateGraph>{
                             );
 
                             if(_imgLogo == null) {
-                              alertHelper.showSnakbar(context, "Se ha seleccionado una imagen por defecto", whiteBack, Colors.black);
+                              AlertHelper.showSnakbar(context, "Se ha seleccionado una imagen por defecto", 3, backgroundWhite, Colors.black);
                             }
                           },
                           style: ElevatedButton.styleFrom(
