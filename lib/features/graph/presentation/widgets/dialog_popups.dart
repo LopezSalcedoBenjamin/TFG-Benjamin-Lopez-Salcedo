@@ -99,7 +99,7 @@ class AppDialogs{
                           onPressed: () async {
                             Navigator.pop(dialogContext);
                             await FileManager.purgeFromFavorites(path);
-                            await FileManager.removeFolders(path);
+                            await FileManager.removeGraphs(path);
                             await FileManager.deleteDirectory(Directory(path));
                             if(!context.mounted) return;
                             AlertHelper.showSnakbar(context, 'Se ha ELIMINADO la carpeta "${path.split('/').last}"', 5, redAlert, Colors.white);
@@ -206,7 +206,7 @@ class AppDialogs{
                           onPressed: () async {
                             Navigator.pop(dialogContext);
                             await FileManager.purgeFromFavorites(path);
-                            await FileManager.removeFolders(path);
+                            await FileManager.removeGraphs(path);
                             if(!context.mounted) return;
                             AlertHelper.showSnakbar(context, 'Se ha olvidado la carpeta "${path.split('/').last}"', 5, redAlert, Colors.white);
                             Navigator.pushAndRemoveUntil(
@@ -238,6 +238,8 @@ class AppDialogs{
   static void showRenameDialog(BuildContext context, String path, String oldName, Function(String) onConfirm){
 
     Color hintNameColor = Colors.black26;
+    Color nameColor = mainBlue;
+    bool exist = false;
 
     final TextEditingController nameGraphController = TextEditingController();
 
@@ -273,13 +275,16 @@ class AppDialogs{
 
                     SizedBox(height: 10.h,),
 
-                    RichText(
-                        text: TextSpan(
-                          children: [
-                            TextSpan(text: 'Nombre actual: ',style: TextStyle(color: Colors.black, fontSize: 20.sp, fontWeight: FontWeight.bold)),
-                            TextSpan(text: '"$oldName"',style: TextStyle(color: mainBlue, fontSize: 20.sp, fontWeight: FontWeight.bold))
-                          ]
-                        )
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                      child: RichText(
+                          text: TextSpan(
+                              children: [
+                                TextSpan(text: 'Nombre actual: ',style: TextStyle(color: Colors.black, fontSize: 20.sp, fontWeight: FontWeight.bold)),
+                                TextSpan(text: '"$oldName"',style: TextStyle(color: mainBlue, fontSize: 20.sp, fontWeight: FontWeight.bold))
+                              ]
+                          )
+                      ),
                     ),
 
                     SizedBox(height: 15.h,),
@@ -287,14 +292,20 @@ class AppDialogs{
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
                       child: TextField(
-                        onTap: () {setState(() => hintNameColor = Colors.white54);},
+                        onTap: () {
+                          setState(() {
+                            hintNameColor = Colors.white54;
+                            nameColor = mainBlue;
+                            exist = false;
+                          });
+                          },
                         controller: nameGraphController,
-                        style: TextStyle(color: mainBlue),
+                        style: TextStyle(color: nameColor),
                         maxLength: 25,
                         maxLengthEnforcement: MaxLengthEnforcement.enforced,
                         decoration: InputDecoration(
                           counterStyle: TextStyle(
-                            color: nameGraphController.text.length > 25 ? redAlert : Colors.black26,
+                            color: nameGraphController.text.length >= 25 ? redAlert : Colors.black26,
                             fontSize: 12.sp,
                             fontWeight: FontWeight.bold,
                           ),
@@ -318,6 +329,17 @@ class AppDialogs{
                       ),
                     ),
 
+                    if(exist) ...[
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h)
+                        ,child:Text(
+                          'Ya existe ese nombre en la carpeta actual',
+                          style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
+                        textAlign: TextAlign.center,
+                        ),
+                      ),
+                    ],
+
                     SizedBox(height: 15.h,),
 
                     Padding(
@@ -326,19 +348,31 @@ class AppDialogs{
                         child: ElevatedButton(
                           onPressed: () async {
                             if(nameGraphController.text.isEmpty){
-                              AlertHelper.showSnakbar(context, 'No hay nuevo nombre, por favor escoge uno antes de confirmar', 5, redAlert, Colors.white);
+                              Navigator.pop(dialogContext);
+                              if(!context.mounted) return;
+                              AlertHelper.showSnakbar(context, 'No se ha cambiado el nombre', 3, backgroundWhite, Colors.black);
                               return;
                             }
+
+                            final parent = path.substring(0, path.lastIndexOf('/'));
+                            if (Directory('$parent/${nameGraphController.text}').existsSync()) {
+                              setState(() {
+                                nameColor = redAlert;
+                                exist = true;
+                              });
+                              return;
+                            }else {
+                              exist = false;
+                            }
+
                             Navigator.pop(dialogContext);
                             final l = await FileManager.loadFavorites();
                             final String newPath = await FileManager.renameDirectory(path, nameGraphController.text);
                             FileManager.renameFile('$newPath/$oldName.json', '${nameGraphController.text}.json');
-                            if (l.contains(path)){
-                              await FileManager.toggleFavorites(newPath);
-                            }
+                            if (l.contains(path)) await FileManager.toggleFavorite(newPath);
                             await FileManager.purgeFromFavorites(path);
-                            await FileManager.removeFolders(path);
-                            await FileManager.saveFolders(newPath);
+                            await FileManager.removeGraphs(path);
+                            await FileManager.saveGraphs(newPath);
                             if(!context.mounted) return;
                             AlertHelper.showSnakbar(context, 'Grafo renombrado a: "${nameGraphController.text}"', 3, backgroundWhite, Colors.black);
                             onConfirm(nameGraphController.text);
@@ -363,6 +397,8 @@ class AppDialogs{
   }
 
   static void showChangeLogoDialog(BuildContext context, File logo, Function(File) onConfirm){
+
+    bool logoChanged = false;
 
     showDialog(
         context: context,
@@ -404,7 +440,10 @@ class AppDialogs{
                         borderRadius: BorderRadius.circular(12.r),
                       ),
                       child: LogoPicker(onImageSelected: (img){
-                        setState(() => logo = img);
+                        setState((){
+                          logo = img;
+                          logoChanged = true;
+                        });
                       }),
                     ),
 
@@ -437,9 +476,16 @@ class AppDialogs{
                           Expanded(
                             child: ElevatedButton(
                               onPressed: () async {
-                                if (!context.mounted) return;
                                 Navigator.pop(dialogContext);
+                                if (!context.mounted) return;
+
+                                if(!logoChanged){
+                                  AlertHelper.showSnakbar(context, 'No se ha cambiado el logo', 3, backgroundWhite, Colors.black);
+                                  return;
+                                }
+
                                 onConfirm(logo);
+
                                 if(logo.existsSync()) {
                                   AlertHelper.showSnakbar(context, 'Se ha cambiado el logo del grafo', 3, backgroundWhite, Colors.black);
                                 }else{
@@ -471,6 +517,7 @@ class AppDialogs{
   static void showChangeLocationDialog(BuildContext context, String path, Function(String) onConfirm){
 
     String? newPath;
+    bool exist = false;
 
     showDialog(
         context: context,
@@ -521,7 +568,7 @@ class AppDialogs{
                                 text: TextSpan(
                                     children: [
                                       TextSpan(text: '"${path.substring(0,path.lastIndexOf('/'))}/',style: TextStyle(color: Colors.black, fontSize: 14.sp, fontWeight: FontWeight.bold)),
-                                      TextSpan(text: path.split('/').last, style: TextStyle(color: Colors.blue, fontSize: 16.sp, fontWeight: FontWeight.bold))
+                                      TextSpan(text: '${path.split('/').last}"', style: TextStyle(color: Colors.blue, fontSize: 16.sp, fontWeight: FontWeight.bold))
                                     ]
                                 )
                             ),
@@ -542,7 +589,20 @@ class AppDialogs{
                     SizedBox(height: 5.h,),
 
                     if (newPath != null) ...[
-                      Padding(
+                      if(exist) ...[
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h)
+                          ,child:Column(
+                          children: [
+                            Text("Seleccione una carpeta válida", style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold), textAlign: TextAlign.center,),
+                            Text(
+                              'Ya existe una carpeta con el mismo nombre en la ubicación escogida',
+                              style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
+                              textAlign: TextAlign.center,
+                            ),
+                          ],)
+                        ),
+                      ]else Padding(
                         padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
                         child: Column(
                           children: [
@@ -569,8 +629,11 @@ class AppDialogs{
                       padding: EdgeInsets.symmetric(horizontal: 60.w, vertical: 0.h),
                       child: ElevatedButton(
                           onPressed: () async {
-                            final folder = newPath = await FileManager.pickFolder();
-                            setState(() => newPath = folder );
+                            final folder = newPath = await FileManager.pickDirectory();
+                            setState(() {
+                              newPath = folder;
+                              exist = false;
+                            });
                           },
                           style: ElevatedButton.styleFrom(
                               backgroundColor: mainPurple,
@@ -589,37 +652,45 @@ class AppDialogs{
 
                     Padding(
                       padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                      child: Expanded(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            if(newPath == null){
-                              AlertHelper.showSnakbar(context, 'No se ha escogido nueva ruta', 3, backgroundWhite, Colors.black);
-                              return;
-                            }
+                      child: ElevatedButton(
+                        onPressed: () async {
+                          if(newPath == null){
                             Navigator.pop(dialogContext);
-
-                            final l = await FileManager.loadFavorites();
-                            final selectedPath = await FileManager.moveDirectory(path, newPath!);
-
-                            if (l.contains(path)){
-                              await FileManager.toggleFavorites(selectedPath);
-                            }
-                            await FileManager.purgeFromFavorites(path);
-                            await FileManager.removeFolders(path);
-                            await FileManager.saveFolders(selectedPath);
                             if(!context.mounted)return;
-                            onConfirm(selectedPath);
-                            AlertHelper.showSnakbar(context, 'Se ha cambiado la ruta del grafo exitosamente', 3, backgroundWhite, Colors.black);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: mainBlue,
-                            elevation: 0,
-                            minimumSize: Size(double.infinity, 50.r),
-                            padding: EdgeInsets.all(10.r),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
-                          ),
-                          child: Text("Confirmar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                            AlertHelper.showSnakbar(context, 'No se ha escogido nueva ruta', 3, backgroundWhite, Colors.black);
+                            return;
+                          }
+
+                          if(Directory('$newPath/${path.split('/').last}').existsSync()){
+                            setState(() {
+                              exist = true;
+                            });
+                            return;
+                          }
+
+                          Navigator.pop(dialogContext);
+
+                          final l = await FileManager.loadFavorites();
+                          final selectedPath = await FileManager.moveDirectory(path, newPath!);
+
+                          if (l.contains(path)){
+                            await FileManager.toggleFavorite(selectedPath);
+                          }
+                          await FileManager.purgeFromFavorites(path);
+                          await FileManager.removeGraphs(path);
+                          await FileManager.saveGraphs(selectedPath);
+                          if(!context.mounted)return;
+                          onConfirm(selectedPath);
+                          AlertHelper.showSnakbar(context, 'Se ha cambiado la ruta del grafo exitosamente', 3, backgroundWhite, Colors.black);
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: mainBlue,
+                          elevation: 0,
+                          minimumSize: Size(double.infinity, 50.r),
+                          padding: EdgeInsets.all(10.r),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
                         ),
+                        child: Text("Confirmar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
                       ),
                     ),
 

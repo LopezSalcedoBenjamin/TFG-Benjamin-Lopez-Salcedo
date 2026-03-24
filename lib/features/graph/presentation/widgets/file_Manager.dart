@@ -4,30 +4,26 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class FileManager {
 
-  //GESTION DE ARCHIVOS Y CARPETAS ______________________________________________________
+  //_________________________________________________ GESTION DE CARPETAS _________________________________________________
 
   //Escoge un directorio por pantalla y retorna su dirección
-  static Future<String?> pickFolder() async {
-
+  static Future<String?> pickDirectory() async {
     String? folder = await FilePicker.platform.getDirectoryPath(
       initialDirectory: '/storage/emulated/0/Documents',
     );
-
-    if (folder != null) {
-      print("Carpeta seleccionada: $folder");
-    }
-
+    if (folder != null) print("Carpeta seleccionada: $folder");
     return folder;
   }
 
-  //Crea una carpeta en una dirección vaultPath con el nombre escogido folderName
-  static void createDirectory(String vaultPath, String folderName) {
-    final dir = Directory('$vaultPath/$folderName');
+  //Crea una directorio/carpeta con la ruta y nombre escogidos
+  static void createDirectory(String folderPath, String folderName) {
+    final dir = Directory('$folderPath/$folderName');
     if (!dir.existsSync()) {
       dir.createSync(recursive: true);
     }
   }
 
+  //Cambia el nombre de un directorio devolviendo su nueva ruta
   static Future<String> renameDirectory(String oldPath, String newName) async {
     final dir = Directory(oldPath);
     final path = oldPath.substring(0,oldPath.lastIndexOf('/'));
@@ -36,6 +32,7 @@ class FileManager {
     return newPath;
   }
 
+  //Mueve un directorio a una nueva ubicación retornando su nueva ruta
   static Future<String> moveDirectory(String oldPath, String newLocation) async {
     final dir = Directory(oldPath);
     final dirName = oldPath.split('/').last;
@@ -44,14 +41,30 @@ class FileManager {
     return newPath;
   }
 
-  //Crear archivo json y carpeta dentro de la carpeta escogida
+  //Elimina un directorio junto con su contenido
+  static Future<void> deleteDirectory(Directory dir) async {
+    await dir.delete(recursive: true);
+  }
 
-  //Crea un archivo en la direccion path con un contenido content
+  //_________________________________________________ GESTION DE ARCHIVOS _________________________________________________
+
+  //Selecciona por pantalla un archivo y retorna su dirección
+  static Future<void> pickFile() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles();
+    if (result != null) {
+      File file = File(result.files.single.path!);
+    } else {
+      // Usuario canceló la selección
+    }
+  }
+
+  //Crea un archivo con la ruta, nombre y contenido seleccionados
   static Future<void> createFile(String path, String content, String name) async {
     File file = File("$path/$name");
     await file.writeAsString(content);
   }
 
+  //Renombra un archivo
   static Future<String> renameFile(String oldPath, String newName) async {
     final file = File(oldPath);
     final path = oldPath.substring(0,oldPath.lastIndexOf('/'));
@@ -60,27 +73,12 @@ class FileManager {
     return newPath;
   }
 
-  //Selecciona por pantalla un archivo y retorna su dirección
-  static Future<void> pickFile() async {
-    FilePickerResult? result = await FilePicker.platform.pickFiles();
-
-    if (result != null) {
-      File file = File(result.files.single.path!);
-    } else {
-      // Usuario canceló la selección
-    }
-  }
-
-  //Selecciona por pantalla un archivo y lo borra
+  //Borra el archivo indicado
   static Future<void> deleteFile(File file) async {
     await file.delete();
   }
 
-  //Selecciona por pantalla un directorio y lo borra
-  static Future<void> deleteDirectory(Directory dir) async {
-    await dir.delete(recursive: true);
-  }
-
+  //Copia una image como logo.png en la ruta indicada
   static Future<void> copyImage(File img, String path) async {
     try{
       final destination = "$path/logo.png";
@@ -90,42 +88,41 @@ class FileManager {
     }
   }
 
-  //Metodo de creación de txt para los nodos
-  //Metodo para borrar los archivos
-  //Olvidar -> quitar del registro de la app, se tendria que usar pickFolder para recordar
-
-  //PERSISTENCIA ______________________________________________________
-  //To do: Olvidar -> quitar del registro de la app, se tendria que usar pickFolder para recordar
-  //Done:  Guardar y cargar
+  // _________________________________________________ PERSISTENCIA _________________________________________________
 
   static const _keyFavGraphs = 'favorite_graphs';
   static const _KeyGraphs = 'saved_graphs';
 
-  static Future<void> saveFolders(String path) async {
+  //Guarda la ruta de un grafo en la persistencia
+  static Future<void> saveGraphs(String path) async {
     final saves = await SharedPreferences.getInstance();
     final list = saves.getStringList(_KeyGraphs) ?? [];
     if(!list.contains(path)) list.add(path);
     await saves.setStringList(_KeyGraphs, list);
   }
 
-  static Future<List<String>> loadFolders() async {
+  //Carga la lista de rutas de los grafos guardados
+  static Future<List<String>> loadGraphs() async {
     final saves = await SharedPreferences.getInstance();
     return saves.getStringList(_KeyGraphs) ?? [];
   }
 
-  static Future<void> removeFolders(String path) async {
+  //Elimina la ruta de un grafo de la persistencia
+  static Future<void> removeGraphs(String path) async {
     final saves = await SharedPreferences.getInstance();
     final list = saves.getStringList(_KeyGraphs) ?? [];
     list.remove(path);
     await saves.setStringList(_KeyGraphs, list);
   }
 
+  //Carga la lista de rutas de grafos favoritos
   static Future<List<String>> loadFavorites() async {
     final favs = await SharedPreferences.getInstance();
     return favs.getStringList(_keyFavGraphs) ?? [];
   }
 
-  static Future<void> toggleFavorites(String path) async {
+  //Añade o elimina la ruta de un grafo de la lista de favoritos
+  static Future<void> toggleFavorite(String path) async {
     final favs = await SharedPreferences.getInstance();
     final list = favs.getStringList(_keyFavGraphs) ?? [];
     if(list.contains(path)){
@@ -136,9 +133,10 @@ class FileManager {
     await favs.setStringList(_keyFavGraphs, list);
   }
 
+  //Elimina la ruta de un grafo si existe en la lista de favoritos
   static Future<void> purgeFromFavorites(String f) async {
     final favorites = await FileManager.loadFavorites();
-    if(favorites.contains(f)) FileManager.toggleFavorites(f);
+    if(favorites.contains(f)) FileManager.toggleFavorite(f);
   }
 
 //IMPORTANTE __________________

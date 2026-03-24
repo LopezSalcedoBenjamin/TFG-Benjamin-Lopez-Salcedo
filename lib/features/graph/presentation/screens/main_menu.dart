@@ -32,7 +32,7 @@ class _MainMenuState extends State<MainMenu>{
   }
 
   Future<void> _loadGraphs() async {
-    final graphs = await FileManager.loadFolders();
+    final graphs = await FileManager.loadGraphs();
     final favorites = await FileManager.loadFavorites();
     final sortedGraphs = [
       ...favorites.where((f) => graphs.contains(f)),
@@ -159,9 +159,18 @@ class _MainMenuState extends State<MainMenu>{
 
                         ElevatedButton(
                             onPressed: () async {
-                              final String? folderGraph = await FileManager.pickFolder();
+                              final String? folderGraph = await FileManager.pickDirectory();
                               if (folderGraph == null) return;
 
+                              if(_graphs.contains(folderGraph)){
+                                AlertHelper.showSnakbar(
+                                    context,
+                                    'La carpeta ya estaba añadida en la lista',
+                                    3,
+                                    backgroundWhite,
+                                    Colors.black);
+                                return;
+                              }
                               if (await _tryGraph(folderGraph) == false){
                                 AlertHelper.showSnakbar(
                                     context,
@@ -180,7 +189,7 @@ class _MainMenuState extends State<MainMenu>{
                                     Colors.black);
                               }
 
-                              await FileManager.saveFolders(folderGraph);
+                              await FileManager.saveGraphs(folderGraph);
                               await _loadGraphs();
                             },
                             style: ElevatedButton.styleFrom(
@@ -330,7 +339,7 @@ class _MainMenuState extends State<MainMenu>{
                                                 Expanded(
                                                   child: ElevatedButton(
                                                       onPressed: () async {
-                                                        await FileManager.toggleFavorites(_graphs[index]);
+                                                        await FileManager.toggleFavorite(_graphs[index]);
                                                         await _loadGraphs();
                                                       },
                                                       style: ElevatedButton.styleFrom(

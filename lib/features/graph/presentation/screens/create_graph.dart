@@ -26,6 +26,7 @@ class _CreateGraphState extends State<CreateGraph>{
   String? _locGraph;
 
   Color _hintNameColor = Colors.white54;
+  Color _nameColor = Colors.white70;
   Color _locButtonColor = Colors.white70;
 
   final TextEditingController _nameGraphController = TextEditingController();
@@ -114,14 +115,17 @@ class _CreateGraphState extends State<CreateGraph>{
                           Text("Nombre del grafo", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold),),
 
                           TextField(
-                            onTap: () {setState(() => _hintNameColor = Colors.white54);},
+                            onTap: () {
+                              setState(() => _hintNameColor = Colors.white54);
+                              setState(() => _nameColor = Colors.white70 );
+                              },
                             controller: _nameGraphController,
-                            style: TextStyle(color: Colors.white70),
+                            style: TextStyle(color: _nameColor),
                             maxLength: 25,
                             maxLengthEnforcement: MaxLengthEnforcement.enforced,
                             decoration: InputDecoration(
                               counterStyle: TextStyle(
-                                color: _nameGraphController.text.length > 25 ? redAlert : Colors.white54,
+                                color: _nameGraphController.text.length >= 25 ? redAlert : Colors.white54,
                                 fontSize: 12.sp,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -147,7 +151,7 @@ class _CreateGraphState extends State<CreateGraph>{
 
                           Text("Localización", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold),),
                           if (_locGraph != null) ...[
-                            Text("El grafo se guardará en:", style: TextStyle(color: Colors.white70, fontSize: 14.sp),),
+                            Text("El grafo se guardará en:", style: TextStyle(color: _locButtonColor, fontSize: 14.sp),),
                             Text(_locGraph!, style: TextStyle(color: Colors.blue, fontSize: 14.sp),),
                           ]
                           else Text("Escoge una carpeta para guardar el grafo", style: TextStyle(color: _locButtonColor, fontSize: 14.sp),),
@@ -156,7 +160,7 @@ class _CreateGraphState extends State<CreateGraph>{
 
                           ElevatedButton(
                               onPressed: () async {
-                                final folder = _locGraph = await FileManager.pickFolder();
+                                final folder = _locGraph = await FileManager.pickDirectory();
                                 setState(() => _locGraph = folder );
                                 setState(() => _locButtonColor = Colors.white70 );
                               },
@@ -209,8 +213,20 @@ class _CreateGraphState extends State<CreateGraph>{
                               return;
                             }
 
+                            if(Directory("$_locGraph/${_nameGraphController.text}").existsSync()){
+                              AlertHelper.showSnakbar(
+                                  context,
+                                  'Ya existe un grafo o carpeta con nombre "${_nameGraphController.text}" en la ruta seleccionada. Por favor escoja un nombre o localización diferentes'
+                                  , 5, redAlert, Colors.white);
+
+                              setState(() => _nameColor = redAlert );
+                              setState(() => _locButtonColor = redAlert );
+
+                              return;
+                            }
+
                             await createGraph(_nameGraphController.text, _locGraph!, _imgLogo);
-                            await FileManager.saveFolders('$_locGraph/${_nameGraphController.text}');
+                            await FileManager.saveGraphs('$_locGraph/${_nameGraphController.text}');
                             if (!mounted) return;
 
                             Navigator.push(

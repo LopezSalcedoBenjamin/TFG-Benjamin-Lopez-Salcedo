@@ -12,6 +12,7 @@ import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presen
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import 'features/graph/presentation/widgets/alert_manager.dart';
 import 'features/graph/presentation/widgets/file_Manager.dart';
 
 void main() async{
@@ -166,7 +167,7 @@ class PruebasFilePicker extends StatelessWidget {
 
             ElevatedButton(
               onPressed: () async {
-                dir = await FileManager.pickFolder();
+                dir = await FileManager.pickDirectory();
                 print("Carpeta seleccionada: $dir");
               },
               child: Text("Escoger carpeta"),
@@ -210,9 +211,9 @@ class PruebasFilePicker extends StatelessWidget {
 
             ElevatedButton(
               onPressed: () async {
-                FileManager.saveFolders(dir!);
+                FileManager.saveGraphs(dir!);
                 print("Path: $dir \n Persistencia: ");
-                final List<String> f = await FileManager.loadFolders();
+                final List<String> f = await FileManager.loadGraphs();
                 print(f);
               },
               child: Text("Guardar carpetas"),
