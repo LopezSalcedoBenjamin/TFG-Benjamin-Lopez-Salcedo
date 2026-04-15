@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/graph_canvas.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/main_menu.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/alert_manager.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/file_Manager.dart';
@@ -225,13 +226,15 @@ class _CreateGraphState extends State<CreateGraph>{
                               return;
                             }
 
+                            final newGraphPath = '$_locGraph/${_nameGraphController.text}';
+
                             await createGraph(_nameGraphController.text, _locGraph!, _imgLogo);
-                            await FileManager.saveGraphs('$_locGraph/${_nameGraphController.text}');
+                            await FileManager.saveGraphs(newGraphPath);
                             if (!mounted) return;
 
-                            Navigator.push(
+                            Navigator.pushReplacement(
                                 context,
-                                MaterialPageRoute(builder: (c) => MainMenu())             //CAMBIAR A SHOWGRAPH_________________________________________________________
+                                MaterialPageRoute(builder: (c) => GraphCanvas(graphPath: newGraphPath))
                             );
 
                             if(_imgLogo == null) {

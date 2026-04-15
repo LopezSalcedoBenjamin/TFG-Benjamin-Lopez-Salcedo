@@ -39,6 +39,8 @@ dependencies:
   flutter_riverpod: ^2.4.0
   shared_preferences: ^2.2.2
   image_picker: ^1.0.4
+  permission_handler: ^11.3.0
+  device_info_plus: ^10.0.0
 
 dev_dependencies:
   flutter_test:

@@ -8,6 +8,9 @@ import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presen
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/alert_manager.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/file_Manager.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/image_picker.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+import '../../../../permission_service.dart';
 
 class AppDialogs{
 
@@ -699,6 +702,49 @@ class AppDialogs{
               ),
             )
         )
+    );
+  }
+
+  static Future<void> showPermissionDeniedDialog(BuildContext context, bool esPermanente) async {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) => AlertDialog(
+        icon: const Icon(Icons.folder_off_outlined, size: 40, color: mainPurple),
+        title: const Text('Permiso necesario', style: TextStyle(color: redAlert, fontWeight: FontWeight.bold),),
+        backgroundColor: backgroundWhite,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(15.r),
+        ),
+        content: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 5.w, vertical: 0.h),
+          child: Text(
+            esPermanente
+                ? 'Has denegado el permiso permanentemente.\n\nPulsa "Reintentar" para volver a solicitarlo.'
+                : 'Sin permiso de almacenamiento no es posible acceder a los grafos guardados.',
+            style: TextStyle(fontSize: 16.sp, fontWeight: FontWeight.bold),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cerrar', style: TextStyle(color: redAlert),),
+          ),
+          FilledButton.icon(
+            style: FilledButton.styleFrom(backgroundColor: mainPurple),
+            icon: const Icon(Icons.settings),
+            label: const Text('Reintentar'),
+            onPressed: () async {
+              Navigator.pop(ctx);
+              final granted = await PermissionService.requestStoragePermission();
+              if (!granted && context.mounted) {
+                final permanent = await PermissionService.isPermanentlyDenied();
+                AppDialogs.showPermissionDeniedDialog(context, permanent);
+              }
+            },
+          ),
+        ],
+      ),
     );
   }
 

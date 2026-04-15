@@ -23,6 +23,25 @@ class FileManager {
     }
   }
 
+  static Future<void> copyDirectory(String sourcePath, String destinationPath) async {
+    final source = Directory(sourcePath);
+    final destination = Directory(destinationPath);
+
+    if (!destination.existsSync()) {
+      destination.createSync(recursive: true);
+    }
+
+    await for (final entity in source.list(recursive: false)) {
+      if (entity is File) {
+        final newPath = '$destinationPath/${entity.path.split('/').last}';
+        await entity.copy(newPath);
+      } else if (entity is Directory) {
+        final newDirPath = '$destinationPath/${entity.path.split('/').last}';
+        await copyDirectory(entity.path, newDirPath);
+      }
+    }
+  }
+
   //Cambia el nombre de un directorio devolviendo su nueva ruta
   static Future<String> renameDirectory(String oldPath, String newName) async {
     final dir = Directory(oldPath);
@@ -60,8 +79,13 @@ class FileManager {
 
   //Crea un archivo con la ruta, nombre y contenido seleccionados
   static Future<void> createFile(String path, String content, String name) async {
-    File file = File("$path/$name");
-    await file.writeAsString(content);
+    try {
+      File file = File("$path/$name");
+      await file.writeAsString(content);
+      print("Archivo creado en: $path/$name");
+    } catch (e) {
+      print("Error al crear archivo: $e");
+    }
   }
 
   //Renombra un archivo
@@ -137,6 +161,17 @@ class FileManager {
   static Future<void> purgeFromFavorites(String f) async {
     final favorites = await FileManager.loadFavorites();
     if(favorites.contains(f)) FileManager.toggleFavorite(f);
+  }
+
+  static Future<void> saveLastAccessedTime(String path) async{
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("accessed_${path.split(" / ").last}", DateTime.now().toIso8601String());
+  }
+
+  static Future<DateTime> getLastAccessedTime(String path) async{
+    final prefs = await SharedPreferences.getInstance();
+    final date = prefs.getString("accessed_${path.split(" / ").last}");
+    return date != null ? DateTime.parse(date) : DateTime.fromMicrosecondsSinceEpoch(0);
   }
 
 //IMPORTANTE __________________

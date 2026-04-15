@@ -13,6 +13,8 @@ import '../../../../data/datasources/graph_file_datasource.dart';
 import '../widgets/image_picker.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
+import 'graph_canvas.dart';
+
 class ManageGraph extends StatefulWidget {
 
   final String graphPath;
@@ -251,9 +253,9 @@ class _ManageGraphState extends State<ManageGraph>{
                                   onPressed: () async {
                                     if (!mounted) return;
 
-                                    Navigator.push(
+                                    Navigator.pushReplacement(
                                         context,
-                                        MaterialPageRoute(builder: (c) => MainMenu())             //CAMBIAR A SHOWGRAPH_________________________________________________________
+                                        MaterialPageRoute(builder: (c) => GraphCanvas(graphPath: _locGraph))
                                     );
                                   },
                                   style: ElevatedButton.styleFrom(
