@@ -4,6 +4,7 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/consts.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/NIA_screen.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/node_list.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -17,14 +18,36 @@ class GraphCanvas extends StatefulWidget {
   State<GraphCanvas> createState() => _GraphCanvasState();
 }
 
-class _GraphCanvasState extends State<GraphCanvas> {
+class _GraphCanvasState extends State<GraphCanvas>
+    with SingleTickerProviderStateMixin{
 
   String _json = '';
+
+  bool _speedDialOpen = false;
+  late AnimationController _animationController;
+  late Animation<double> _expandAnimation;
+
+  void _toggleSpeedDial(){
+    setState(() => _speedDialOpen = !_speedDialOpen);
+    if(_speedDialOpen){
+      _animationController.forward();
+    }else {
+      _animationController.reverse();
+    }
+  }
 
   @override
   void initState() {
     super.initState();
     _loadJson();
+    _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200),);
+    _expandAnimation = CurvedAnimation(parent: _animationController, curve: Curves.easeOut,);
+  }
+
+  @override
+  void dispose() {
+    _animationController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadJson() async {
@@ -78,7 +101,7 @@ class _GraphCanvasState extends State<GraphCanvas> {
         backgroundColor: colorAppBar,
         iconTheme: IconThemeData(color: Colors.white),
         leading: IconButton(
-            icon: Icon(Icons.manage_search),
+            icon: Icon(Icons.chrome_reader_mode_outlined, size: 35.r,),
             onPressed: (){
               Navigator.push(
                   context,
@@ -114,30 +137,52 @@ class _GraphCanvasState extends State<GraphCanvas> {
         )
       ),
 
-      bottomNavigationBar: BottomNavigationBar(
-          items: const<BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: 'Home',
-              backgroundColor: bottomBar,
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.business),
-              label: 'Business',
-              backgroundColor: Colors.green,
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.school),
-              label: 'School',
-              backgroundColor: Colors.purple,
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.settings),
-              label: 'Settings',
-              backgroundColor: Colors.pink,
-            ),
-          ],
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
 
+        },
+        backgroundColor: mainPurple,
+        child: const Icon(Icons.add, color: Colors.white,),
+      ),
+
+      bottomNavigationBar: BottomAppBar(
+        color: bottomBar,
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 10.r,
+        height: 80.h,
+        child: SizedBox(
+          height: 56.h,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              InkWell(
+                onTap: (){
+                  Navigator.push(
+                      context,
+                    MaterialPageRoute(builder: (c) => NiaScreen())
+                  ); //RELOAD GRAPH
+                },
+                child: Image.asset("assets/icons/NIA_button.png")
+              ),
+
+              SizedBox(width: 64.w),
+
+              InkWell(
+                onTap: () {
+
+                },
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.explore, color: Colors.white),
+                    Text('Explorar', style: TextStyle(color: Colors.white, fontSize: 14.sp)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

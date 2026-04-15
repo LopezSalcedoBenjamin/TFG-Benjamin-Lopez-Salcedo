@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/create_node.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/node_menu.dart';
 
 import '../../../../consts.dart';
@@ -71,127 +72,131 @@ class _NodeListState extends State<NodeList> {
 
     final filteredNodes = _nodes.where((n) => n.split("/").last.split('.').first.toLowerCase().contains(_search.toLowerCase())).toList();
 
-    return Scaffold(
-
-      appBar: AppBar(
-        automaticallyImplyLeading: false,
-        title: Text(widget.graphPath.split('/').last, style: TextStyle(color: Colors.white),),
-        backgroundColor: colorAppBar,
-        iconTheme: IconThemeData(color: Colors.white),
-        leading: IconButton(
-          icon: Icon(Icons.manage_search),
-          onPressed: (){
-            Navigator.pop(context);
-          },
-        ),
-      ),
-
-      backgroundColor: blackGraph1,
-
-      body: Column(
-        children: [
-          SizedBox(height: 15.h,),
-
-          Padding(
-              padding:  EdgeInsets.symmetric(horizontal: 30.w),
-              child: Row(
-                children: [
-                  PopupMenuButton(
-                      color: mainPurple,
-                      onSelected: (mode) async{
-                        setState(()=>_sortMode = mode);
-                        await _loadNodes();
-                      },
-                      child: Container(
-                        width: 50.r,
-                        height: 50.r,
-                        decoration: BoxDecoration(
-                          color: button3,
-                          borderRadius: BorderRadius.circular(5.r),
-                        ),
-                        child: Icon(Icons.sort, color: Colors.white, size: 24.r,),
-                      ),
-                      itemBuilder: (context) => [
-                        PopupMenuItem(
-                          value: SortMode.nameAZ,
-                          child: Row( children: [
-                            Icon(Icons.sort_by_alpha, color: Colors.white70, size: 18.r,),
-                            SizedBox(width: 5.w,),
-                            Text("Nombre (A-Z)", style: TextStyle(color: Colors.white70, fontSize: 14.sp),),
-                            if(_sortMode == SortMode.nameAZ) ...[
-                              Spacer(),
-                              Icon(Icons.check, color: mainPurple, size: 18.r,)
-                            ]
-                          ],),
-                        ),
-                        PopupMenuItem(
-                          value: SortMode.nameZA,
-                          child: Row( children: [
-                            Icon(Icons.sort_by_alpha, color: Colors.white70, size: 18.r,),
-                            SizedBox(width: 5.w,),
-                            Text("Nombre (Z-A)", style: TextStyle(color: Colors.white70, fontSize: 14.sp),),
-                            if(_sortMode == SortMode.nameZA) ...[
-                              Spacer(),
-                              Icon(Icons.check, color: mainPurple, size: 18.r,)
-                            ]
-                          ],),
-                        ),
-                      ]
-                  ),
-
-                  SizedBox(width: 5.w,),
-
-                  Expanded(
-                    child: TextField(
-                      onChanged: (value) {
-                        setState(() => _search = value);
-                      },
-                      style: TextStyle(color: Colors.white, fontSize: 16.sp),
-                      decoration: InputDecoration(
-                        hintText: "Buscar nodo...",
-                        hintStyle: TextStyle(color: Colors.white54, fontSize: 16.sp),
-                        prefixIcon: Icon(Icons.search, color: Colors.white54, size: 20.r),
-                        filled: true,
-                        fillColor: button2,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(5.r),
-                          borderSide: BorderSide.none,
-                        ),
-                        contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 12.w),
-                      ),
-                    ),
-                  ),
-
-                  SizedBox(width: 5.w,),
-
-                  IconButton(
-                    onPressed: () async {
-                      //CREATE NODE and RELOAD NODE LIST
-                      },
-                    style: ElevatedButton.styleFrom(
-                      elevation: 0,
-                      backgroundColor: button4,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
-                    ),
-                    icon: Icon(Icons.add, color: Colors.white, size: 24.r,),
-                  ),
-
-                ],
-              )
+    return GestureDetector(
+      onTap: () => FocusScope.of(context).unfocus(),
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: Text(widget.graphPath.split('/').last, style: TextStyle(color: Colors.white),),
+          backgroundColor: colorAppBar,
+          iconTheme: IconThemeData(color: Colors.white),
+          leading: IconButton(
+            icon: Icon(Icons.chrome_reader_mode_outlined, size: 35.r, color: mainPurple,),
+            onPressed: (){
+              Navigator.pop(context);
+            },
           ),
+        ),
 
-          SizedBox(height: 15.h,),
+        backgroundColor: blackGraph1,
 
-          SizedBox(
-            height: 250.h,
-            child: ListView.builder(
-              shrinkWrap: true,
-              physics: BouncingScrollPhysics(),
-              padding: EdgeInsets.symmetric(horizontal: 50.w),
-              itemCount: filteredNodes.length,
-              itemBuilder: (context,index){
-                final node = filteredNodes[index];
-                return Padding(
+        body: Column(
+          children: [
+            SizedBox(height: 15.h,),
+
+
+            Padding(
+                padding:  EdgeInsets.symmetric(horizontal: 30.w),
+                child: Row(
+                  children: [
+                    PopupMenuButton(
+                        color: mainPurple,
+                        onSelected: (mode) async{
+                          setState(()=>_sortMode = mode);
+                          await _loadNodes();
+                        },
+                        child: Container(
+                          width: 50.r,
+                          height: 50.r,
+                          decoration: BoxDecoration(
+                            color: button3,
+                            borderRadius: BorderRadius.circular(5.r),
+                          ),
+                          child: Icon(Icons.sort, color: Colors.white, size: 24.r,),
+                        ),
+                        itemBuilder: (context) => [
+                          PopupMenuItem(
+                            value: SortMode.nameAZ,
+                            child: Row( children: [
+                              Icon(Icons.sort_by_alpha, color: Colors.white70, size: 18.r,),
+                              SizedBox(width: 5.w,),
+                              Text("Nombre (A-Z)", style: TextStyle(color: Colors.white70, fontSize: 14.sp),),
+                              if(_sortMode == SortMode.nameAZ) ...[
+                                Spacer(),
+                                Icon(Icons.check, color: mainPurple, size: 18.r,)
+                              ]
+                            ],),
+                          ),
+                          PopupMenuItem(
+                            value: SortMode.nameZA,
+                            child: Row( children: [
+                              Icon(Icons.sort_by_alpha, color: Colors.white70, size: 18.r,),
+                              SizedBox(width: 5.w,),
+                              Text("Nombre (Z-A)", style: TextStyle(color: Colors.white70, fontSize: 14.sp),),
+                              if(_sortMode == SortMode.nameZA) ...[
+                                Spacer(),
+                                Icon(Icons.check, color: mainPurple, size: 18.r,)
+                              ]
+                            ],),
+                          ),
+                        ]
+                    ),
+
+                    SizedBox(width: 5.w,),
+
+                    Expanded(
+                      child: TextField(
+                        onChanged: (value) {
+                          setState(() => _search = value);
+                        },
+                        style: TextStyle(color: Colors.white, fontSize: 16.sp),
+                        decoration: InputDecoration(
+                          hintText: "Buscar nodo...",
+                          hintStyle: TextStyle(color: Colors.white54, fontSize: 16.sp),
+                          prefixIcon: Icon(Icons.search, color: Colors.white54, size: 20.r),
+                          filled: true,
+                          fillColor: button2,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(5.r),
+                            borderSide: BorderSide.none,
+                          ),
+                          contentPadding: EdgeInsets.symmetric(vertical: 0, horizontal: 12.w),
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(width: 5.w,),
+
+                    IconButton(
+                      onPressed: () async {
+                        Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (c) => CreateNode(graphPath: widget.graphPath))
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        elevation: 0,
+                        backgroundColor: button4,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                      ),
+                      icon: Icon(Icons.add, color: Colors.white, size: 24.r,),
+                    ),
+
+                  ],
+                )
+            ),
+
+            SizedBox(height: 15.h,),
+
+            SizedBox(
+              child: ListView.builder(
+                shrinkWrap: true,
+                physics: BouncingScrollPhysics(),
+                padding: EdgeInsets.symmetric(horizontal: 50.w),
+                itemCount: filteredNodes.length,
+                itemBuilder: (context,index){
+                  final node = filteredNodes[index];
+                  return Padding(
                     padding: EdgeInsets.only(bottom: 10.h),
                     child: Expanded(
                       child: Container(
@@ -207,7 +212,10 @@ class _NodeListState extends State<NodeList> {
                                 onPressed: () async {
                                   Navigator.push(
                                       context,
-                                      MaterialPageRoute(builder: (c) => NodeMenu())
+                                      MaterialPageRoute(builder: (c) => NodeMenu(
+                                        nodePath: node,
+                                        graphJson: "${widget.graphPath}/${widget.graphPath.split('/').last}.json",)
+                                      )
                                   ).then((_) => _loadNodes());
                                 },
                                 style: ElevatedButton.styleFrom(
@@ -217,10 +225,7 @@ class _NodeListState extends State<NodeList> {
                                     alignment: Alignment.centerLeft,
                                     padding: EdgeInsets.all(18.r),
                                     shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.only(
-                                          topLeft: Radius.circular(12.r),
-                                          bottomLeft: Radius.circular(12.r),
-                                        )
+                                        borderRadius: BorderRadius.circular(12.r)
                                     )
                                 ),
                                 child: Text(
@@ -238,11 +243,12 @@ class _NodeListState extends State<NodeList> {
                         ),
                       ),
                     ),
-                );
-              },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
