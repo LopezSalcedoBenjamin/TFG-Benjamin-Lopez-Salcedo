@@ -24,14 +24,14 @@ class FileManager {
   }
 
   static Future<void> copyDirectory(String sourcePath, String destinationPath) async {
-    final source = Directory(sourcePath);
+    final sourceDir = Directory(sourcePath);
     final destination = Directory(destinationPath);
 
     if (!destination.existsSync()) {
       destination.createSync(recursive: true);
     }
 
-    await for (final entity in source.list(recursive: false)) {
+    await for (final entity in sourceDir.list(recursive: false)) {
       if (entity is File) {
         final newPath = '$destinationPath/${entity.path.split('/').last}';
         await entity.copy(newPath);
@@ -95,6 +95,11 @@ class FileManager {
     final newPath = '$path/$newName';
     await file.rename(newPath);
     return newPath;
+  }
+
+  //Escribe el contenido deseado en el archivo
+  static void writeContent(String filePath, String content) {
+    File(filePath).writeAsStringSync(content);
   }
 
   //Borra el archivo indicado
@@ -163,11 +168,13 @@ class FileManager {
     if(favorites.contains(f)) FileManager.toggleFavorite(f);
   }
 
+  //Guarda la fecha mas reciente en la que se accedió al archivo
   static Future<void> saveLastAccessedTime(String path) async{
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString("accessed_${path.split(" / ").last}", DateTime.now().toIso8601String());
   }
 
+  //Devuelve la ultima fecha de acceso del archivo
   static Future<DateTime> getLastAccessedTime(String path) async{
     final prefs = await SharedPreferences.getInstance();
     final date = prefs.getString("accessed_${path.split(" / ").last}");

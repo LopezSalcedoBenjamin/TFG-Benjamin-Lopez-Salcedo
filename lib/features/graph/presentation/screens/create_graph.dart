@@ -230,6 +230,7 @@ class _CreateGraphState extends State<CreateGraph>{
 
                             await createGraph(_nameGraphController.text, _locGraph!, _imgLogo);
                             await FileManager.saveGraphs(newGraphPath);
+                            await FileManager.saveLastAccessedTime(newGraphPath);
                             if (!mounted) return;
 
                             Navigator.pushReplacement(

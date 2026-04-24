@@ -3,16 +3,18 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import '../../../../consts.dart';
 
-class EdgeButton extends StatelessWidget {
-  final String edgeName;
-  final String edgeType;
+class ListButton extends StatelessWidget {
+  final String name;
+  final String appendix;
   final double height;
+  final Color fillColor;
 
-  const EdgeButton({
+  const ListButton({
     super.key,
-    required this.edgeName,
-    required this.edgeType,
-    required this.height
+    required this.name,
+    required this.appendix,
+    required this.height,
+    required this.fillColor,
   });
 
   @override
@@ -24,25 +26,29 @@ class EdgeButton extends StatelessWidget {
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(15.r),
           border: Border.all(color: Colors.white24, width: 2.w),
-          color: blackGraph3,
+          color: fillColor,
         ),
         child: Row(
           children: [
             Expanded(
               child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.w),
+                padding: EdgeInsets.symmetric(horizontal: 18.w),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      edgeName,
-                      style: TextStyle(color: Colors.white, fontSize: 18.sp, fontWeight: FontWeight.bold),
+                      name,
+                      style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.bold),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    Text(
-                      "Tipo: $edgeType",
-                      style: TextStyle(color: Colors.white54, fontSize: 13.sp),
-                    ),
+                    if(appendix != "")...[
+                      Text(
+                        appendix,
+                        style: TextStyle(color: Colors.white54, fontSize: 13.sp),
+                      ),
+                    ]
                   ],
                 ),
               ),

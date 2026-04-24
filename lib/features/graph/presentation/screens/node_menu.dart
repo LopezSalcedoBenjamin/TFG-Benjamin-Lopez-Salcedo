@@ -1,19 +1,25 @@
 import 'dart:convert';
 import 'dart:io';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/data/datasources/graph_file_datasource.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/domain/entities/graph_entity.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/domain/entities/node_entity.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/dialog_popups.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/file_Manager.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/widget_buttons.dart';
 
 import '../../../../consts.dart';
 import '../../../../domain/entities/edge_entity.dart';
 
 List<String> titles = <String>['Contenido', 'Relaciones'];
+enum NodeOptions {rename, delete}
 
 class NodeMenu extends StatefulWidget {
-  final String nodePath;
-  final String graphJson;
-  const NodeMenu({super.key, required this.nodePath, required this.graphJson});
+  final NodeEntity node;
+  final String graphPath;
+  const NodeMenu({super.key, required this.node, required this.graphPath});
 
   @override
   State<NodeMenu> createState() => _NodeMenuState();
@@ -22,27 +28,28 @@ class NodeMenu extends StatefulWidget {
 class _NodeMenuState extends State<NodeMenu> {
 
   String _nodeName = "";
-  String _fileContent = "Cargando...";
+  bool _isEditingContent = false;
   late File _file;
-  late GraphEntity _graph;
+  GraphEntity _graph = GraphEntity(nodes: [], edges: []);
   List<EdgeEntity> _originEdges = [];
   List<EdgeEntity> _destinationEdges = [];
+
+  final TextEditingController _nodeContentController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _nodeName = widget.nodePath.split('/').last.split('.').first;
+    _nodeContentController.text = "Cargando ...";
+    _isEditingContent = false;
+    _nodeName = widget.node.title;
     _loadFile();
     _loadGraph();
   }
 
   Future<void> _loadGraph() async{
     try {
-      final String jsonContent;
-      final file = File(widget.graphJson);
-      jsonContent = await file.readAsString();
-
-      final graph = GraphEntity.fromJson(jsonDecode(jsonContent));
+      final file = File("${widget.graphPath}/${widget.graphPath.split('/').last}.json");
+      final graph = GraphEntity.fromJson(jsonDecode(await file.readAsString()));
 
       setState(() {
         _graph = graph;
@@ -56,13 +63,17 @@ class _NodeMenuState extends State<NodeMenu> {
   }
 
   Future<void> _loadFile() async {
-    _file = File(widget.nodePath);
+    try {
+      _file = File(widget.node.filePath);
 
-    if(await _file.exists()){
-      final content = await _file.readAsString();
-      setState(() => _fileContent = content);
-    }else{
-      setState(() => _fileContent = "Error: Error de lectura o archivo inexistente. \n ${_file.path}");
+      if(await _file.exists()){
+        final content = await _file.readAsString();
+        setState(() => _nodeContentController.text = content);
+      }else{
+        setState(() => _nodeContentController.text = "Error: Error de lectura o archivo inexistente. \n ${_file.path}");
+      }
+    } catch (e) {
+      debugPrint('Error cargando nodo: $e');
     }
   }
 
@@ -78,12 +89,89 @@ class _NodeMenuState extends State<NodeMenu> {
         child: Scaffold(
           backgroundColor: blackGraph1,
           appBar: AppBar(
-            title: Text(widget.nodePath.split('/').last.split('.').first, style: TextStyle(color: Colors.white),),
+            toolbarHeight: 80.h,
+            title: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(widget.node.title, style: TextStyle(color: Colors.white),),
+                Text(
+                   _originEdges.isNotEmpty || _destinationEdges.isNotEmpty ?
+                    "Origen: ${_originEdges.length} | Destino: ${_destinationEdges.length}"
+                    : "Sin relaciones",
+                  style: TextStyle(color: Colors.white24, fontSize: 14.sp),)
+              ]),
             backgroundColor: colorAppBar,
             iconTheme: IconThemeData(color: Colors.white),
             notificationPredicate: (ScrollNotification notification) {
               return notification.depth == 1;
             },
+            actions: [
+              PopupMenuButton<NodeOptions>(
+                  color: mainPurple,
+                  icon: Icon(Icons.settings, size: 30.r,),
+                  onSelected: (option) async{
+                    switch(option){
+                      case NodeOptions.rename:
+                        AppDialogs.showRenameNodeDialog(
+                            context,
+                            _graph.nodes.toList(),
+                            widget.node,
+                            (newName) async{
+                              final fileExtension = _file.path.split('.').last;
+                              await FileManager.renameFile(_file.path, "$newName.$fileExtension");
+                              final renamedNode = NodeEntity(
+                                  id: widget.node.id,
+                                  title: newName,
+                                  x: widget.node.x, y: widget.node.y,
+                                  filePath: "${_file.path.substring(0,_file.path.lastIndexOf('/'))}/$newName.$fileExtension"
+                              );
+                              await updateEdges(widget.node, renamedNode, widget.graphPath);
+                              await saveNode(renamedNode, widget.graphPath);
+
+                              if (context.mounted) {
+                                Navigator.pushReplacement(
+                                  context,
+                                  MaterialPageRoute(builder: (c) => NodeMenu(
+                                    node: renamedNode,
+                                    graphPath: widget.graphPath,
+                                  )),
+                                );
+                              }
+                            }
+                            );
+                      case NodeOptions.delete:
+                        AppDialogs.showDeleteNodeDialog(
+                            context,
+                            widget.node,
+                            () async {
+
+                              await deleteNode(widget.node, widget.graphPath);
+                              if(context.mounted) Navigator.pop(context);
+
+                            }
+                        );
+                    }
+                  },
+                  itemBuilder: (context) => [
+                    PopupMenuItem<NodeOptions>(
+                      value: NodeOptions.rename,
+                      child: Row( children: [
+                        Icon(Icons.edit, color: Colors.white, size: 22.r,),
+                        SizedBox(width: 5.w,),
+                        Text("Renombrar", style: TextStyle(color: Colors.white, fontSize: 14.sp),),
+                      ],),
+                    ),
+                    PopupMenuItem<NodeOptions>(
+                      value: NodeOptions.delete,
+                      child: Row( children: [
+                        Icon(Icons.delete, color: Colors.white, size: 22.r,),
+                        SizedBox(width: 5.w,),
+                        Text("Eliminar", style: TextStyle(color: Colors.white, fontSize: 14.sp),),
+                      ],),
+                    ),
+                  ]),
+              SizedBox(width: 15.w,),
+            ],
             bottom: TabBar(
                 labelColor: mainPurple,
                 unselectedLabelColor: Colors.white24,
@@ -97,7 +185,9 @@ class _NodeMenuState extends State<NodeMenu> {
 
           body: TabBarView(
               children: <Widget>[
+
                 // ________________ CONTENIDO NODO ________________
+
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 20.w,vertical: 15.h),
                   child: Column(
@@ -112,9 +202,17 @@ class _NodeMenuState extends State<NodeMenu> {
                             color: blackGraph2
                           ),
                           child: SingleChildScrollView(
-                            child: Text(
-                              _fileContent,
+                            child: TextField(
+                              controller: _nodeContentController,
+                              enabled: _isEditingContent,
+                              minLines: 1,
+                              maxLines: null,
                               style: TextStyle(color: Colors.white, fontSize: 18.sp, fontFamily: 'monospace'),
+                              decoration: InputDecoration(
+                                filled: false,
+                                hintText: "Nodo vacío.\nPulsa editar para escribir contenido...",
+                                hintStyle: TextStyle(color: Colors.white24, fontSize: 15.sp),
+                              ),
                             ),
                           ),
                         ),
@@ -125,27 +223,34 @@ class _NodeMenuState extends State<NodeMenu> {
 
                       ElevatedButton(
                         onPressed: () async {
-
+                          if(_isEditingContent){
+                            FileManager.writeContent(widget.node.filePath, _nodeContentController.text);
+                          }
+                          setState(() => _isEditingContent = !_isEditingContent);
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: bottomBar,
+                          backgroundColor: _isEditingContent? mainPurple : colorAppBar,
                           elevation: 0,
                           minimumSize: Size(double.infinity, 50.r),
                           padding: EdgeInsets.all(10.r),
                           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
                         ),
-                        child: Text("Modificar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                        child: _isEditingContent ?
+                            Text("Guardar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold))
+                            : Text("Editar texto", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold))
                       ),
                     ],
                   )
                 ),
+
                 // ________________ RELACIONES NODO ________________
+
                 Padding(
                   padding: EdgeInsets.symmetric(horizontal: 30.w,vertical: 10.h),
                   child: Column(
                     children: [
 
-                      // ________________ RELACIONES DESTINO ________________
+                      // ________________ RELACIONES ORIGEN ________________
                       Expanded(
                           child: Container(
                             decoration: BoxDecoration(
@@ -156,21 +261,36 @@ class _NodeMenuState extends State<NodeMenu> {
                             child: Column(
                               children: [
                                 Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 30.w),
+                                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 5.h),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
-                                        "Relaciones destino a:",
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20.sp,
-                                            fontWeight: FontWeight.bold),
+                                      Icon(Icons.arrow_circle_right_outlined, color: mainPurple, size: 32.r,),
+                                      SizedBox(width: 5.w,),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Origen (salientes):",
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 20.sp,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          Text(
+                                            "Este nodo apunta a:",
+                                            style: TextStyle(
+                                                color: Colors.white38,
+                                                fontSize: 14.sp,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
                                       ),
+                                      Spacer(),
                                       IconButton(
                                         onPressed: () async {},
                                         icon: Icon(Icons.add_circle, color: mainPurple, size: 32.r),
-                                        tooltip: "Añadir relación",
+                                        tooltip: "Añadir relación saliente",
                                       ),
                                     ],
                                   ),
@@ -179,7 +299,15 @@ class _NodeMenuState extends State<NodeMenu> {
                                 SizedBox(height: 5.sp),
 
                                 Expanded(
-                                  child: ListView.builder(
+                                child: _originEdges.isEmpty ?
+                                Container(
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    'Este nodo no apunta a nadie',
+                                    style: TextStyle(color: mainPurple, fontSize: 15.sp),
+                                  ),
+                                )
+                                : ListView.builder(
                                     physics: BouncingScrollPhysics(),
                                     padding: EdgeInsets.symmetric(horizontal: 20.w),
                                     itemCount: _originEdges.length,
@@ -187,14 +315,19 @@ class _NodeMenuState extends State<NodeMenu> {
                                       final edge = _originEdges[index];
                                       return GestureDetector(
                                         onTap: (){
-                                          Navigator.pushReplacement(
+                                          try {
+                                            final node = _graph.nodes.firstWhere((n) => n.title == edge.to);
+                                            Navigator.pushReplacement(
                                               context,
                                               MaterialPageRoute(builder: (c) => NodeMenu(
-                                                  nodePath: "${_graph.nodes.where((n) => n.title == edge.to).first.filePath}/${edge.to}.txt",
-                                                  graphJson: widget.graphJson)),
-                                          );
+                                                  node: node,
+                                                  graphPath: widget.graphPath)),
+                                            );
+                                          } catch (e) {
+                                            debugPrint('Nodo destino no encontrado: ${edge.from}');
+                                          }
                                         },
-                                        child: EdgeButton(edgeName: edge.to, edgeType: edge.type, height: itemSize),
+                                        child: ListButton(name: edge.to, appendix: "Tipo: ${edge.type}", height: itemSize, fillColor: blackGraph3,),
                                       );
                                     },
                                   ),
@@ -206,7 +339,7 @@ class _NodeMenuState extends State<NodeMenu> {
 
                       SizedBox(height: 5.sp),
 
-                      // ________________ RELACIONES ORIGEN ________________
+                      // ________________ RELACIONES DESTINO ________________
                       Expanded(
                           child: Container(
                             decoration: BoxDecoration(
@@ -217,21 +350,36 @@ class _NodeMenuState extends State<NodeMenu> {
                             child: Column(
                               children: [
                                 Padding(
-                                  padding: EdgeInsets.symmetric(horizontal: 30.w),
+                                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 5.h),
                                   child: Row(
                                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                     children: [
-                                      Text(
-                                        "Relaciones origen en:",
-                                        style: TextStyle(
-                                            color: Colors.white,
-                                            fontSize: 20.sp,
-                                            fontWeight: FontWeight.bold),
+                                      Icon(Icons.arrow_circle_left_outlined, color: mainGreen, size: 32.r,),
+                                      SizedBox(width: 5.w,),
+                                      Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          Text(
+                                            "Destino (entrantes):",
+                                            style: TextStyle(
+                                                color: Colors.white,
+                                                fontSize: 20.sp,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                          Text(
+                                            "Este nodo es apuntado por:",
+                                            style: TextStyle(
+                                                color: Colors.white38,
+                                                fontSize: 14.sp,
+                                                fontWeight: FontWeight.bold),
+                                          ),
+                                        ],
                                       ),
+                                      Spacer(),
                                       IconButton(
                                         onPressed: () async {},
-                                        icon: Icon(Icons.add_circle, color: mainPurple, size: 32.r),
-                                        tooltip: "Añadir relación",
+                                        icon: Icon(Icons.add_circle, color: mainGreen, size: 32.r),
+                                        tooltip: "Añadir relación entrante",
                                       ),
                                     ],
                                   ),
@@ -240,7 +388,15 @@ class _NodeMenuState extends State<NodeMenu> {
                                 SizedBox(height: 5.sp),
 
                                 Expanded(
-                                  child: ListView.builder(
+                                  child: _destinationEdges.isEmpty ?
+                                  Container(
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      'Nadie apunta a este nodo',
+                                      style: TextStyle(color: mainGreen, fontSize: 15.sp),
+                                    ),
+                                  )
+                                  :ListView.builder(
                                     physics: BouncingScrollPhysics(),
                                     padding: EdgeInsets.symmetric(horizontal: 20.w),
                                     itemCount: _destinationEdges.length,
@@ -248,14 +404,19 @@ class _NodeMenuState extends State<NodeMenu> {
                                       final edge = _destinationEdges[index];
                                       return GestureDetector(
                                         onTap: (){
-                                          Navigator.pushReplacement(
-                                            context,
-                                            MaterialPageRoute(builder: (c) => NodeMenu(
-                                                nodePath: "${_graph.nodes.where((n) => n.title == edge.from).first.filePath}/${edge.from}.txt",
-                                                graphJson: widget.graphJson)),
-                                          );
+                                          try {
+                                            final node = _graph.nodes.firstWhere((n) => n.title == edge.from);
+                                            Navigator.pushReplacement(
+                                              context,
+                                              MaterialPageRoute(builder: (c) => NodeMenu(
+                                                  node: node,
+                                                  graphPath: widget.graphPath)),
+                                            );
+                                          } catch (e) {
+                                            debugPrint('Nodo origen no encontrado: ${edge.from}');
+                                          }
                                         },
-                                        child: EdgeButton(edgeName: edge.from, edgeType: edge.type, height: itemSize),
+                                        child: ListButton(name: edge.from, appendix: "Tipo: ${edge.type}", height: itemSize, fillColor: blackGraph3,),
                                       );
                                     },
                                   ),

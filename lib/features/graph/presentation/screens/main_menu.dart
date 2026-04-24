@@ -30,7 +30,7 @@ class _MainMenuState extends State<MainMenu>{
   List<String> _favorites = [];
   final int itemSize = 70;
   String _search = "";
-  SortMode _sortMode = SortMode.nameAZ;
+  SortMode _sortMode = SortMode.lastAccessed;
 
   @override
   void initState() {
@@ -291,7 +291,7 @@ class _MainMenuState extends State<MainMenu>{
                       padding:  EdgeInsets.symmetric(horizontal: 60.w),
                       child: Row(
                         children: [
-                          PopupMenuButton(
+                          PopupMenuButton<SortMode>(
                               color: g1,
                               onSelected: (mode) async{
                                 setState(()=>_sortMode = mode);

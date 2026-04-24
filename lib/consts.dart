@@ -8,8 +8,11 @@ String niaIcon = "";
 
 const Color mainBlue = Color(0xFF1B1873);
 const Color mainPurple = Color(0xFF8A5BF5);
+const Color mainGreen = Color(0xFF00C48C);
 const Color redAlert = Color(0xFFF44242);
 const Color backgroundWhite = Color(0xFFFFF8F0);
+
+const Color cursorColor = Color(0xFF2A1765);
 
 const Color g2 = Color(0xFF100971);
 const Color g1 = Color(0xFF171F7C);
