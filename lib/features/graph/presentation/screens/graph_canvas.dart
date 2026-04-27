@@ -244,8 +244,17 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
                       icon: Icons.share,
                       heroTag: 'relacion',
                       onPressed: () {
-                        _toggleSpeedDial();
-
+                        AppDialogs.showCreateEdgeDialog(
+                          context,
+                          _nodeList,
+                          _edgeList,
+                          null,
+                          null,
+                          (newEdge) async{
+                            await addEdge(newEdge, widget.graphPath);
+                            _loadGraph();
+                          }
+                        );
                       },
                     ),
                     SizedBox(width: 20.w),

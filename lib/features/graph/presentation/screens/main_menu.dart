@@ -249,6 +249,7 @@ class _MainMenuState extends State<MainMenu>{
                               }
 
                               await FileManager.saveGraphs(folderGraph);
+                              await FileManager.saveLastAccessedTime(folderGraph);
                               await _loadGraphs();
                             },
                             style: ElevatedButton.styleFrom(

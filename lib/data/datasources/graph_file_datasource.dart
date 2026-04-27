@@ -169,8 +169,22 @@ Future<void> deleteEdge(EdgeEntity edge, String graphPath) async {
   final json = jsonDecode(await file.readAsString());
   final graph = GraphEntity.fromJson(json);
 
-  final updatedEdges = graph.edges.where((e) => e != edge).toList();
+  for(EdgeEntity e in graph.edges){
+    print(e.toJson().toString());
+  }
+  print("object");
+  print(edge.toJson().toString());
+
+  final updatedEdges = graph.edges.where(
+          (e) => e.from != edge.from
+              && e.type != edge.type
+              && e.to != edge.to
+  ).toList();
   final updatedGraph = GraphEntity(nodes: graph.nodes, edges: updatedEdges);
+  print("object2");
+  for(EdgeEntity e in updatedEdges){
+    print(e.toJson().toString());
+  }
 
   await saveGraph(updatedGraph, graphPath);
 }

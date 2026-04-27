@@ -8,7 +8,7 @@ import 'package:nodos_inteligencia_artificial_tfg_benjamin/domain/entities/graph
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/domain/entities/node_entity.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/dialog_popups.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/file_Manager.dart';
-import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/widget_buttons.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/list_button.dart';
 
 import '../../../../consts.dart';
 import '../../../../domain/entities/edge_entity.dart';
@@ -81,7 +81,7 @@ class _NodeMenuState extends State<NodeMenu> {
   Widget build(BuildContext context) {
 
     const int tabsCount = 2;
-    final double itemSize = 70;
+    final double itemSize = 60;
 
     return DefaultTabController(
       initialIndex: 0,
@@ -288,7 +288,19 @@ class _NodeMenuState extends State<NodeMenu> {
                                       ),
                                       Spacer(),
                                       IconButton(
-                                        onPressed: () async {},
+                                        onPressed: () async {
+                                          AppDialogs.showCreateEdgeDialog(
+                                              context,
+                                              _graph.nodes,
+                                              _graph.edges,
+                                              widget.node,
+                                              null,
+                                              (newEdge) async{
+                                                await addEdge(newEdge, widget.graphPath);
+                                                _loadGraph();
+                                              }
+                                          );
+                                        },
                                         icon: Icon(Icons.add_circle, color: mainPurple, size: 32.r),
                                         tooltip: "Añadir relación saliente",
                                       ),
@@ -307,7 +319,7 @@ class _NodeMenuState extends State<NodeMenu> {
                                     style: TextStyle(color: mainPurple, fontSize: 15.sp),
                                   ),
                                 )
-                                : ListView.builder(
+                                  : ListView.builder(
                                     physics: BouncingScrollPhysics(),
                                     padding: EdgeInsets.symmetric(horizontal: 20.w),
                                     itemCount: _originEdges.length,
@@ -327,7 +339,25 @@ class _NodeMenuState extends State<NodeMenu> {
                                             debugPrint('Nodo destino no encontrado: ${edge.from}');
                                           }
                                         },
-                                        child: ListButton(name: edge.to, appendix: "Tipo: ${edge.type}", height: itemSize, fillColor: blackGraph3,),
+                                        child: ListButton(
+                                          name: edge.to,
+                                          appendix: "Tipo: ${edge.type}",
+                                          height: itemSize,
+                                          fillColor: blackGraph3,
+                                          trailing: IconButton(
+                                            icon: Icon(Icons.link_off, color: Colors.white38, size: 22.r,),
+                                            onPressed: (){
+                                              AppDialogs.showDeleteEdgeDialog(
+                                                  context,
+                                                  edge,
+                                                  () async {
+                                                    await deleteEdge(edge, widget.graphPath);
+                                                    _loadGraph();
+                                                  }
+                                              );
+                                            },
+                                          ),
+                                        ),
                                       );
                                     },
                                   ),
@@ -337,7 +367,7 @@ class _NodeMenuState extends State<NodeMenu> {
                           )
                       ),
 
-                      SizedBox(height: 5.sp),
+                      SizedBox(height: 10.sp),
 
                       // ________________ RELACIONES DESTINO ________________
                       Expanded(
@@ -377,7 +407,19 @@ class _NodeMenuState extends State<NodeMenu> {
                                       ),
                                       Spacer(),
                                       IconButton(
-                                        onPressed: () async {},
+                                        onPressed: () async {
+                                          AppDialogs.showCreateEdgeDialog(
+                                              context,
+                                              _graph.nodes,
+                                              _graph.edges,
+                                              null,
+                                              widget.node,
+                                                  (newEdge) async {
+                                                    await addEdge(newEdge, widget.graphPath);
+                                                    _loadGraph();
+                                              }
+                                          );
+                                        },
                                         icon: Icon(Icons.add_circle, color: mainGreen, size: 32.r),
                                         tooltip: "Añadir relación entrante",
                                       ),
@@ -416,7 +458,25 @@ class _NodeMenuState extends State<NodeMenu> {
                                             debugPrint('Nodo origen no encontrado: ${edge.from}');
                                           }
                                         },
-                                        child: ListButton(name: edge.from, appendix: "Tipo: ${edge.type}", height: itemSize, fillColor: blackGraph3,),
+                                        child: ListButton(
+                                          name: edge.from,
+                                          appendix: "Tipo: ${edge.type}",
+                                          height: itemSize,
+                                          fillColor: blackGraph3,
+                                          trailing: IconButton(
+                                            icon: Icon(Icons.link_off, color: Colors.white38, size: 22.r,),
+                                            onPressed: (){
+                                              AppDialogs.showDeleteEdgeDialog(
+                                                  context,
+                                                  edge,
+                                                  () async {
+                                                    await deleteEdge(edge, widget.graphPath);
+                                                    _loadGraph();
+                                                  }
+                                              );
+                                            },
+                                          ),
+                                        ),
                                       );
                                     },
                                   ),

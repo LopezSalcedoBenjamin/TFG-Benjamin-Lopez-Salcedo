@@ -4,11 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/consts.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/domain/entities/edge_entity.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/domain/entities/node_entity.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/main_menu.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/alert_manager.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/file_Manager.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/image_picker.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/node_search_Autocomplete.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../permission_service.dart';
@@ -58,7 +60,7 @@ class AppDialogs{
     );
   }
 
-  static void showDeleteGraphDialog(BuildContext context, String path){
+  static void showDeleteGraphDialog(BuildContext context, String graphName, Function() onConfirm){
     showDialog(
         context: context,
         builder: (dialogContext) => Dialog(
@@ -67,116 +69,117 @@ class AppDialogs{
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15.r),
           ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+          clipBehavior: Clip.hardEdge,
+          child: GestureDetector(
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  // _____________________________________________________HEADER_____________________________________________________
+                  AppBar(
+                    automaticallyImplyLeading: false,
+                    backgroundColor: redAlert,
+                    elevation: 0,
+                    toolbarHeight: 70.h,
+                    centerTitle: true,
+                    title: Text("Eliminar grafo", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
+                  ),
 
-                Text("ELIMINAR", style: TextStyle(color: redAlert, fontSize: 28.sp, fontWeight: FontWeight.bold)),
-
-                Divider(
-                  color: Colors.grey,
-                  thickness: 3.r,
-                  indent: 20.w,
-                  endIndent: 20.w,
-                ),
-
-                SizedBox(height: 10.h,),
-
-                Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 30.w),
+                  // _____________________________________________________BODY_____________________________________________________
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
                     child: Column(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          "BORRAR el grafo hará que se pierda toda la información.",
-                          style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.justify,
+
+                        Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 30.w),
+                            child: Text(
+                              "ELIMINAR el grafo hará que se pierda toda la información.\nEsto borrará la carpeta con su contenido.",
+                              style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.justify,
+                            )
                         ),
-                        Text(
-                          "Esto borrará la carpeta con su contenido.",
-                          style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.justify,
+
+                        SizedBox(height: 10.h,),
+
+                        Divider(
+                          color: Colors.grey,
+                          thickness: 3.r,
+                          indent: 20.w,
+                          endIndent: 20.w,
                         ),
+
+                        SizedBox(height: 10.h,),
+
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 30.w),
+                          child: Text(
+                            '¿Estás seguro de eliminar "${graphName}"?',
+                            style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+
+                        SizedBox(height: 15.h,),
+
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                          child:
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    AlertHelper.showSnakbar(context, 'Se ha cancelado la operación "ELIMINAR"', 3, backgroundWhite, Colors.black);
+                                    Navigator.pop(context);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: g2,
+                                    elevation: 0,
+                                    minimumSize: Size(double.infinity, 50.r),
+                                    padding: EdgeInsets.all(10.r),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                  ),
+                                  child: Text("Cancelar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+
+                              SizedBox(
+                                width: 10.w,
+                              ),
+
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    Navigator.pop(dialogContext);
+                                    if(!context.mounted) return;
+                                    onConfirm();
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.redAccent,
+                                    elevation: 0,
+                                    minimumSize: Size(double.infinity, 50.r),
+                                    padding: EdgeInsets.all(10.r),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                  ),
+                                  child: Text("Eliminar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
                       ],
-                    )
-                ),
-
-                SizedBox(height: 20.h,),
-
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 30.w),
-                  child: Text(
-                    '¿Estás seguro de eliminar "${path.split('/').last}"?',
-                    style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
+                    ),
                   ),
-                ),
-
-                SizedBox(height: 15.h,),
-
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                  child:
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            AlertHelper.showSnakbar(context, 'Se ha cancelado la operación "ELIMINAR"', 3, backgroundWhite, Colors.black);
-                            Navigator.pop(context);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: g2,
-                            elevation: 0,
-                            minimumSize: Size(double.infinity, 50.r),
-                            padding: EdgeInsets.all(10.r),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
-                          ),
-                          child: Text("Cancelar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-
-                      SizedBox(
-                        width: 10.w,
-                      ),
-
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            Navigator.pop(dialogContext);
-                            await FileManager.purgeFromFavorites(path);
-                            await FileManager.removeGraphs(path);
-                            await FileManager.deleteDirectory(Directory(path));
-                            if(!context.mounted) return;
-                            AlertHelper.showSnakbar(context, 'Se ha ELIMINADO la carpeta "${path.split('/').last}"', 5, redAlert, Colors.white);
-                            Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(builder: (c) => MainMenu()),
-                                    (route) => false
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.redAccent,
-                            elevation: 0,
-                            minimumSize: Size(double.infinity, 50.r),
-                            padding: EdgeInsets.all(10.r),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
-                          ),
-                          child: Text("ELIMINAR", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              ],
+                ],
+              ),
             ),
-          ),
+          )
         )
     );
   }
 
-  static void showForgetGraphDialog(BuildContext context, String path){
+  static void showForgetGraphDialog(BuildContext context, Function() onConfirm){
     showDialog(
         context: context,
         builder: (dialogContext) => Dialog(
@@ -185,99 +188,115 @@ class AppDialogs{
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15.r),
           ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-
-                Text("OLVIDAR", style: TextStyle(color: redAlert, fontSize: 28.sp, fontWeight: FontWeight.bold)),
-
-                Divider(
-                  color: Colors.grey,
-                  thickness: 3.r,
-                  indent: 20.w,
-                  endIndent: 20.w,
-                ),
-
-                SizedBox(height: 10.h,),
-
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 30.w),
-                    child: Column(
-                      children: [
-                        Text(
-                          "Olvidar el grafo lo quitará de la app sin perder datos.",
-                          style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.justify,
-                        ),
-                        Text(
-                          "Abrir su carpeta en el menú inicial hará que vuelva.",
-                          style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
-                          textAlign: TextAlign.justify,
-                        ),
-                      ],
-                    )
-                ),
-
-                SizedBox(height: 15.h,),
-
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                  child:
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            AlertHelper.showSnakbar(context, 'Se ha cancelado la operación "Olvidar"', 3, backgroundWhite, Colors.black);
-                            Navigator.pop(context);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: g2,
-                            elevation: 0,
-                            minimumSize: Size(double.infinity, 50.r),
-                            padding: EdgeInsets.all(10.r),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
-                          ),
-                          child: Text("Cancelar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-
-                      SizedBox(
-                        width: 10.w,
-                      ),
-
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            Navigator.pop(dialogContext);
-                            await FileManager.purgeFromFavorites(path);
-                            await FileManager.removeGraphs(path);
-                            if(!context.mounted) return;
-                            AlertHelper.showSnakbar(context, 'Se ha olvidado la carpeta "${path.split('/').last}"', 5, redAlert, Colors.white);
-                            Navigator.pushAndRemoveUntil(
-                                context,
-                                MaterialPageRoute(builder: (c) => MainMenu()),
-                                (route) => false
-                            );
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.redAccent,
-                            elevation: 0,
-                            minimumSize: Size(double.infinity, 50.r),
-                            padding: EdgeInsets.all(10.r),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
-                          ),
-                          child: Text("Olvidar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-                    ],
+          clipBehavior: Clip.hardEdge,
+          child: GestureDetector(
+            onTap: ()=> FocusManager.instance.primaryFocus?.unfocus(),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  // _____________________________________________________HEADER_____________________________________________________
+                  AppBar(
+                    automaticallyImplyLeading: false,
+                    backgroundColor: redAlert,
+                    elevation: 0,
+                    toolbarHeight: 70.h,
+                    centerTitle: true,
+                    title: Text("Olvidar grafo", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
                   ),
-                )
-              ],
+
+                  // _____________________________________________________BODY_____________________________________________________
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+
+                        SizedBox(height: 10.h,),
+
+                        Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 30.w),
+                            child: Text(
+                              "OLVIDAR el grafo lo quitará de la app sin perder datos.\nAbrir su carpeta en el menú inicial hará que vuelva.",
+                              style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+                              textAlign: TextAlign.justify,
+                            )
+                        ),
+
+                        SizedBox(height: 10.h,),
+
+                        Divider(
+                          color: Colors.grey,
+                          thickness: 3.r,
+                          indent: 20.w,
+                          endIndent: 20.w,
+                        ),
+
+                        SizedBox(height: 10.h,),
+
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 30.w),
+                          child: Text(
+                            '¿Estás seguro de olvidar el grafo?',
+                            style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+
+                        SizedBox(height: 15.h,),
+
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                          child:
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    AlertHelper.showSnakbar(context, 'Se ha cancelado la operación "Olvidar"', 3, backgroundWhite, Colors.black);
+                                    Navigator.pop(context);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: g2,
+                                    elevation: 0,
+                                    minimumSize: Size(double.infinity, 50.r),
+                                    padding: EdgeInsets.all(10.r),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                  ),
+                                  child: Text("Cancelar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+
+                              SizedBox(
+                                width: 10.w,
+                              ),
+
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    Navigator.pop(dialogContext);
+                                    if(!context.mounted) return;
+                                    onConfirm();
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.redAccent,
+                                    elevation: 0,
+                                    minimumSize: Size(double.infinity, 50.r),
+                                    padding: EdgeInsets.all(10.r),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                  ),
+                                  child: Text("Olvidar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          )
         )
     );
   }
@@ -299,143 +318,146 @@ class AppDialogs{
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.r),
               ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
+              clipBehavior: Clip.hardEdge,
+              child: GestureDetector(
+                onTap: ()=> FocusManager.instance.primaryFocus?.unfocus(),
+                child: SingleChildScrollView(
+                  child: Column(
+                      children: [
 
-                    AppBar(
-                      backgroundColor: Colors.transparent,
-                      elevation: 0,
-                      centerTitle: true,
-                      title: Text("Renombrar grafo", style: TextStyle(color: mainPurple, fontSize: 28.sp, fontWeight: FontWeight.bold)),
-
-                    ),
-
-                    Divider(
-                      color: Colors.grey,
-                      thickness: 3.r,
-                      indent: 20.w,
-                      endIndent: 20.w,
-                    ),
-
-                    SizedBox(height: 10.h,),
-
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                      child: RichText(
-                          text: TextSpan(
-                              children: [
-                                TextSpan(text: 'Nombre actual: ',style: TextStyle(color: Colors.black, fontSize: 20.sp, fontWeight: FontWeight.bold)),
-                                TextSpan(text: '"$oldName"',style: TextStyle(color: mainBlue, fontSize: 20.sp, fontWeight: FontWeight.bold))
-                              ]
-                          )
-                      ),
-                    ),
-
-                    SizedBox(height: 15.h,),
-
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                      child: TextField(
-                        onTap: () {
-                          setState(() {
-                            hintNameColor = Colors.black26;
-                            nameColor = mainBlue;
-                            exist = false;
-                          });
-                          },
-                        controller: nameGraphController,
-                        style: TextStyle(color: nameColor),
-                        maxLength: 25,
-                        maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                        decoration: InputDecoration(
-                          counterStyle: TextStyle(
-                            color: nameGraphController.text.length >= 25 ? redAlert : Colors.black26,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
+                        // _____________________________________________________HEADER_____________________________________________________
+                        AppBar(
+                          iconTheme: IconThemeData(
+                            color: Colors.white
                           ),
-                          hintText: "Inserte nuevo nombre...",
-                          hintStyle: TextStyle(color: hintNameColor, fontSize: 15.sp),
-                          filled: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(6.r),
-                            borderSide: BorderSide.none,
-                          ),
-
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-
-                        ),
-
-                        cursorColor: nameGraphController.text.length >= 25 ? redAlert : cursorColor,
-                        onChanged: (value) {
-                          setState(() {});
-                        },
-
-                      ),
-                    ),
-
-                    if(exist) ...[
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h)
-                        ,child:Text(
-                          'Ya existe ese nombre en la carpeta actual',
-                          style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
-                        textAlign: TextAlign.center,
-                        ),
-                      ),
-                    ],
-
-                    SizedBox(height: 15.h,),
-
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          if(nameGraphController.text.isEmpty){
-                            Navigator.pop(dialogContext);
-                            if(!context.mounted) return;
-                            AlertHelper.showSnakbar(context, 'No se ha cambiado el nombre', 3, backgroundWhite, Colors.black);
-                            return;
-                          }
-
-                          final parent = path.substring(0, path.lastIndexOf('/'));
-                          if (Directory('$parent/${nameGraphController.text}').existsSync()) {
-                            setState(() {
-                              nameColor = redAlert;
-                              exist = true;
-                            });
-                            return;
-                          }else {
-                            exist = false;
-                          }
-
-                          Navigator.pop(dialogContext);
-                          final l = await FileManager.loadFavorites();
-                          final String newPath = await FileManager.renameDirectory(path, nameGraphController.text);
-                          FileManager.renameFile('$newPath/$oldName.json', '${nameGraphController.text}.json');
-                          if (l.contains(path)) await FileManager.toggleFavorite(newPath);
-                          await FileManager.purgeFromFavorites(path);
-                          await FileManager.removeGraphs(path);
-                          await FileManager.saveGraphs(newPath);
-                          if(!context.mounted) return;
-                          AlertHelper.showSnakbar(context, 'Grafo renombrado a: "${nameGraphController.text}"', 3, backgroundWhite, Colors.black);
-                          onConfirm(nameGraphController.text);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: mainBlue,
+                          backgroundColor: mainPurple,
                           elevation: 0,
-                          minimumSize: Size(double.infinity, 50.r),
-                          padding: EdgeInsets.all(10.r),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                          toolbarHeight: 70.h,
+                          centerTitle: true,
+                          title: Text("Renombrar grafo", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
+
                         ),
-                        child: Text("Cambiar nombre", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
-                      ),
-                    )
-                  ],
+
+                        // _____________________________________________________BODY_____________________________________________________
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+
+                              SizedBox(height: 10.h,),
+
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                                child: RichText(
+                                    text: TextSpan(
+                                        children: [
+                                          TextSpan(text: 'Nombre actual: ',style: TextStyle(color: Colors.black, fontSize: 20.sp, fontWeight: FontWeight.bold)),
+                                          TextSpan(text: '"$oldName"',style: TextStyle(color: mainBlue, fontSize: 20.sp, fontWeight: FontWeight.bold))
+                                        ]
+                                    )
+                                ),
+                              ),
+
+                              SizedBox(height: 15.h,),
+
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                                child: TextField(
+                                  onTap: () {
+                                    setState(() {
+                                      hintNameColor = Colors.black26;
+                                      nameColor = mainBlue;
+                                      exist = false;
+                                    });
+                                  },
+                                  controller: nameGraphController,
+                                  style: TextStyle(color: nameColor),
+                                  maxLength: 25,
+                                  maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                                  decoration: InputDecoration(
+                                    counterStyle: TextStyle(
+                                      color: nameGraphController.text.length >= 25 ? redAlert : Colors.black26,
+                                      fontSize: 12.sp,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    hintText: "Inserte nuevo nombre...",
+                                    hintStyle: TextStyle(color: hintNameColor, fontSize: 15.sp),
+                                    filled: true,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(6.r),
+                                      borderSide: BorderSide.none,
+                                    ),
+
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+
+                                  ),
+
+                                  cursorColor: nameGraphController.text.length >= 25 ? redAlert : cursorColor,
+                                  onChanged: (value) {
+                                    setState(() {});
+                                  },
+
+                                ),
+                              ),
+
+                              if(exist) ...[
+                                Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h)
+                                  ,child:Text(
+                                  'Ya existe ese nombre en la carpeta actual',
+                                  style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
+                                  textAlign: TextAlign.center,
+                                ),
+                                ),
+                              ],
+
+                              SizedBox(height: 15.h,),
+
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    if(nameGraphController.text.isEmpty){
+                                      Navigator.pop(dialogContext);
+                                      if(!context.mounted) return;
+                                      AlertHelper.showSnakbar(context, 'No se ha cambiado el nombre', 3, backgroundWhite, Colors.black);
+                                      return;
+                                    }
+
+                                    final parent = path.substring(0, path.lastIndexOf('/'));
+                                    if (Directory('$parent/${nameGraphController.text.trim()}').existsSync()) {
+                                      setState(() {
+                                        nameColor = redAlert;
+                                        exist = true;
+                                      });
+                                      return;
+                                    }else {
+                                      exist = false;
+                                    }
+
+                                    Navigator.pop(dialogContext);
+                                    if(!context.mounted) return;
+                                    AlertHelper.showSnakbar(context, 'Grafo renombrado a: "${nameGraphController.text.trim()}"', 3, backgroundWhite, Colors.black);
+                                    onConfirm(nameGraphController.text.trim());
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: mainBlue,
+                                    elevation: 0,
+                                    minimumSize: Size(double.infinity, 50.r),
+                                    padding: EdgeInsets.all(10.r),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                  ),
+                                  child: Text("Cambiar nombre", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                ),
+                              )
+                            ],
+                          ),
+                        ),
+                      ],
+                )
                 ),
-              ),
+              )
             )
         )
     );
@@ -454,106 +476,111 @@ class AppDialogs{
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.r),
               ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-
-                    AppBar(
-                      backgroundColor: Colors.transparent,
-                      elevation: 0,
-                      centerTitle: true,
-                      title: Text("Cambiar logo", style: TextStyle(color: mainPurple, fontSize: 28.sp, fontWeight: FontWeight.bold)),
-
-                    ),
-
-                    Divider(
-                      color: Colors.grey,
-                      thickness: 3.r,
-                      indent: 20.w,
-                      endIndent: 20.w,
-                    ),
-
-                    SizedBox(height: 10.h,),
-
-                    Container(
-                      width: 130.w,
-                      height: 130.h,
-                      decoration: BoxDecoration(
-                        color: mainPurple,
-                        borderRadius: BorderRadius.circular(12.r),
+              clipBehavior: Clip.hardEdge,
+              child: GestureDetector(
+                onTap: ()=> FocusManager.instance.primaryFocus?.unfocus(),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // _____________________________________________________HEADER_____________________________________________________
+                      AppBar(
+                        iconTheme: IconThemeData(
+                            color: Colors.white
+                        ),
+                        backgroundColor: mainPurple,
+                        elevation: 0,
+                        toolbarHeight: 70.h,
+                        centerTitle: true,
+                        title: Text("Cambiar logo", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
                       ),
-                      child: LogoPicker(onImageSelected: (img){
-                        setState((){
-                          logo = img;
-                          logoChanged = true;
-                        });
-                      }),
-                    ),
 
-                    SizedBox(height: 25.h,),
+                      // _____________________________________________________BODY_____________________________________________________
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
 
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                if(logo.existsSync()) await FileManager.deleteFile(logo);
-                                if (!context.mounted) return;
-                                Navigator.pop(dialogContext);
-                                onConfirm(logo);
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: redAlert,
-                                minimumSize: Size(double.infinity, 50.r),
-                                padding: EdgeInsets.all(10.r),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                            Container(
+                              width: 130.w,
+                              height: 130.h,
+                              decoration: BoxDecoration(
+                                color: mainPurple,
+                                borderRadius: BorderRadius.circular(12.r),
                               ),
-                              child: Text("Eliminar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                              child: LogoPicker(onImageSelected: (img){
+                                setState((){
+                                  logo = img;
+                                  logoChanged = true;
+                                });
+                              }),
                             ),
-                          ),
 
-                          SizedBox(width: 10.w,),
+                            SizedBox(height: 25.h,),
 
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                Navigator.pop(dialogContext);
-                                if (!context.mounted) return;
+                            Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                                child: Row(
+                                  children: [
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        onPressed: () async {
+                                          if(logo.existsSync()) await FileManager.deleteFile(logo);
+                                          if (!context.mounted) return;
+                                          Navigator.pop(dialogContext);
+                                          onConfirm(logo);
+                                          AlertHelper.showSnakbar(context, 'Se ha eliminado el logo del grafo\nLogo predeterminado seleccionado', 3, backgroundWhite, Colors.black);
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: redAlert,
+                                          minimumSize: Size(double.infinity, 50.r),
+                                          padding: EdgeInsets.all(10.r),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                        ),
+                                        child: Text("Eliminar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                      ),
+                                    ),
 
-                                if(!logoChanged){
-                                  AlertHelper.showSnakbar(context, 'No se ha cambiado el logo', 3, backgroundWhite, Colors.black);
-                                  return;
-                                }
+                                    SizedBox(width: 10.w,),
 
-                                onConfirm(logo);
+                                    Expanded(
+                                      child: ElevatedButton(
+                                        onPressed: () async {
+                                          Navigator.pop(dialogContext);
+                                          if (!context.mounted) return;
 
-                                if(logo.existsSync()) {
-                                  AlertHelper.showSnakbar(context, 'Se ha cambiado el logo del grafo', 3, backgroundWhite, Colors.black);
-                                }else{
-                                  AlertHelper.showSnakbar(context, 'Logo predeterminado seleccionado', 3, backgroundWhite, Colors.black);
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: mainBlue,
-                                elevation: 0,
-                                minimumSize: Size(double.infinity, 50.r),
-                                padding: EdgeInsets.all(10.r),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
-                              ),
-                              child: Text("Confirmar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                          if(!logoChanged){
+                                            AlertHelper.showSnakbar(context, 'No se ha cambiado el logo', 3, backgroundWhite, Colors.black);
+                                            return;
+                                          }
+
+                                          onConfirm(logo);
+
+                                          if(logo.existsSync()) {
+                                            AlertHelper.showSnakbar(context, 'Se ha cambiado el logo del grafo', 3, backgroundWhite, Colors.black);
+                                          }
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor: mainBlue,
+                                          elevation: 0,
+                                          minimumSize: Size(double.infinity, 50.r),
+                                          padding: EdgeInsets.all(10.r),
+                                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                        ),
+                                        child: Text("Confirmar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                      ),
+                                    ),
+                                  ],
+                                )
                             ),
-                          ),
-                        ],
-                      )
-                    ),
 
-                  ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
-              ),
+              )
             )
         )
     );
@@ -573,175 +600,167 @@ class AppDialogs{
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.r),
               ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-
-                    AppBar(
-                      backgroundColor: Colors.transparent,
-                      elevation: 0,
-                      centerTitle: true,
-                      title: Text("Reubicar grafo", style: TextStyle(color: mainPurple, fontSize: 28.sp, fontWeight: FontWeight.bold)),
-
-                    ),
-
-                    Divider(
-                      color: Colors.grey,
-                      thickness: 3.r,
-                      indent: 20.w,
-                      endIndent: 20.w,
-                    ),
-
-                    SizedBox(height: 5.h,),
-
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                      child: Column(
-                        children: [
-                          Text(
-                              'Localización actual del grafo:'
-                              ,style: TextStyle(color: Colors.black, fontSize: 20.sp, fontWeight: FontWeight.bold)
-                          ),
-
-                          SizedBox(height: 5.h,),
-
-                          Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                            child: RichText(
-                                text: TextSpan(
-                                    children: [
-                                      TextSpan(text: '"${path.substring(0,path.lastIndexOf('/'))}/',style: TextStyle(color: Colors.black, fontSize: 14.sp, fontWeight: FontWeight.bold)),
-                                      TextSpan(text: '${path.split('/').last}"', style: TextStyle(color: Colors.blue, fontSize: 16.sp, fontWeight: FontWeight.bold))
-                                    ]
-                                )
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    SizedBox(height: 10.h,),
-
-                    Divider(
-                      color: Colors.grey,
-                      thickness: 3.r,
-                      indent: 20.w,
-                      endIndent: 20.w,
-                    ),
-
-                    SizedBox(height: 5.h,),
-
-                    if (newPath != null) ...[
-                      if(exist) ...[
-                        Padding(
-                          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h)
-                          ,child:Column(
-                          children: [
-                            Text("Seleccione una carpeta válida", style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold), textAlign: TextAlign.center,),
-                            Text(
-                              'Ya existe una carpeta con el mismo nombre en la ubicación escogida',
-                              style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
-                              textAlign: TextAlign.center,
-                            ),
-                          ],)
+                clipBehavior: Clip.hardEdge,
+              child: GestureDetector(
+                onTap: ()=> FocusManager.instance.primaryFocus?.unfocus(),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // _____________________________________________________HEADER_____________________________________________________
+                      AppBar(
+                        iconTheme: IconThemeData(
+                            color: Colors.white
                         ),
-                      ]else Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                        backgroundColor: mainPurple,
+                        elevation: 0,
+                        toolbarHeight: 70.h,
+                        centerTitle: true,
+                        title: Text("Reubicar grafo", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
+                      ),
+
+                      // _____________________________________________________BODY_____________________________________________________
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
                         child: Column(
+                          mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text("El grafo se guardará en:", style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold), textAlign: TextAlign.center,),
+
                             Padding(
-                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                              child: Text(
-                                  '"$newPath"',
-                                  style: TextStyle(color: Colors.blue, fontSize: 16.sp, fontWeight: FontWeight.bold)
+                              padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 0.h),
+                              child: Column(
+                                children: [
+                                  Text(
+                                      'Localización actual:'
+                                      ,style: TextStyle(color: Colors.black, fontSize: 20.sp, fontWeight: FontWeight.bold)
+                                  ),
+
+                                  SizedBox(height: 5.h,),
+
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                                    child: RichText(
+                                        text: TextSpan(
+                                            children: [
+                                              TextSpan(text: '"${path.substring(0,path.lastIndexOf('/'))}/',style: TextStyle(color: Colors.black, fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                                              TextSpan(text: '${path.split('/').last}"', style: TextStyle(color: Colors.blue, fontSize: 16.sp, fontWeight: FontWeight.bold))
+                                            ]
+                                        )
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
+
+                            SizedBox(height: 10.h,),
+
+                            Divider(
+                              color: Colors.grey,
+                              thickness: 3.r,
+                              indent: 20.w,
+                              endIndent: 20.w,
+                            ),
+
+                            SizedBox(height: 5.h,),
+
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                              child: newPath == null ?
+                              Text("Selecciona una nueva carpeta", style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold), textAlign: TextAlign.center,)
+                                  : exist ?
+                              Column(
+                                children: [
+                                  Text("Seleccione una carpeta válida", style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold), textAlign: TextAlign.center,),
+                                  Text(
+                                    'Ya existe una carpeta con el mismo nombre en la ubicación escogida',
+                                    style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],)
+                                  : Column(
+                                children: [
+                                  Text("El grafo se guardará en:", style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold), textAlign: TextAlign.center,),
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                                    child: Text(
+                                        '"$newPath"',
+                                        style: TextStyle(color: Colors.blue, fontSize: 16.sp, fontWeight: FontWeight.bold)
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+
+                            SizedBox(height: 15.h,),
+
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 60.w, vertical: 0.h),
+                              child: ElevatedButton(
+                                  onPressed: () async {
+                                    final folder = newPath = await FileManager.pickDirectory();
+                                    setState(() {
+                                      newPath = folder;
+                                      exist = false;
+                                    });
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                      backgroundColor: mainPurple,
+                                      elevation: 0,
+                                      minimumSize: Size(double.infinity, 50.r),
+                                      shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(5.r))
+                                  ),
+                                  child: Text(
+                                    newPath == null ?
+                                    "Escoger carpeta"
+                                    : "Cambiar carpeta",
+                                    style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold),
+                                  )
+                              ),
+                            ),
+
+                            SizedBox(height: 15.h,),
+
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                              child: ElevatedButton(
+                                onPressed: () async {
+                                  if(newPath == null){
+                                    Navigator.pop(dialogContext);
+                                    if(!context.mounted)return;
+                                    AlertHelper.showSnakbar(context, 'No se ha escogido nueva ruta', 3, backgroundWhite, Colors.black);
+                                    return;
+                                  }
+
+                                  if(Directory('$newPath/${path.split('/').last}').existsSync()){
+                                    setState(() {
+                                      exist = true;
+                                    });
+                                    return;
+                                  }
+
+                                  Navigator.pop(dialogContext);
+
+                                  if(!context.mounted)return;
+                                  onConfirm(newPath!);
+                                  AlertHelper.showSnakbar(context, 'Se ha cambiado la ruta del grafo exitosamente', 3, backgroundWhite, Colors.black);
+                                },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: mainBlue,
+                                  elevation: 0,
+                                  minimumSize: Size(double.infinity, 50.r),
+                                  padding: EdgeInsets.all(10.r),
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                ),
+                                child: Text("Confirmar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                              ),
+                            ),
+
                           ],
                         ),
                       ),
-                    ]
-                    else Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                      child: Text("Escoge una nueva carpeta", style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold), textAlign: TextAlign.center,),
-                    ),
-
-                    SizedBox(height: 15.h,),
-
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 60.w, vertical: 0.h),
-                      child: ElevatedButton(
-                          onPressed: () async {
-                            final folder = newPath = await FileManager.pickDirectory();
-                            setState(() {
-                              newPath = folder;
-                              exist = false;
-                            });
-                          },
-                          style: ElevatedButton.styleFrom(
-                              backgroundColor: mainPurple,
-                              elevation: 0,
-                              minimumSize: Size(double.infinity, 50.r),
-                              shape: RoundedRectangleBorder( borderRadius: BorderRadius.circular(5.r))
-                          ),
-                          child: Text(
-                            "Cambiar carpeta",
-                            style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold),
-                          )
-                      ),
-                    ),
-
-                    SizedBox(height: 15.h,),
-
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                      child: ElevatedButton(
-                        onPressed: () async {
-                          if(newPath == null){
-                            Navigator.pop(dialogContext);
-                            if(!context.mounted)return;
-                            AlertHelper.showSnakbar(context, 'No se ha escogido nueva ruta', 3, backgroundWhite, Colors.black);
-                            return;
-                          }
-
-                          if(Directory('$newPath/${path.split('/').last}').existsSync()){
-                            setState(() {
-                              exist = true;
-                            });
-                            return;
-                          }
-
-                          Navigator.pop(dialogContext);
-
-                          final l = await FileManager.loadFavorites();
-                          final selectedPath = await FileManager.moveDirectory(path, newPath!);
-
-                          if (l.contains(path)){
-                            await FileManager.toggleFavorite(selectedPath);
-                          }
-                          await FileManager.purgeFromFavorites(path);
-                          await FileManager.removeGraphs(path);
-                          await FileManager.saveGraphs(selectedPath);
-                          if(!context.mounted)return;
-                          onConfirm(selectedPath);
-                          AlertHelper.showSnakbar(context, 'Se ha cambiado la ruta del grafo exitosamente', 3, backgroundWhite, Colors.black);
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: mainBlue,
-                          elevation: 0,
-                          minimumSize: Size(double.infinity, 50.r),
-                          padding: EdgeInsets.all(10.r),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
-                        ),
-                        child: Text("Confirmar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
-                      ),
-                    ),
-
-                  ],
+                    ],
+                  ),
                 ),
-              ),
+              )
             )
         )
     );
@@ -766,183 +785,210 @@ class AppDialogs{
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.r),
               ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AppBar(
-                      automaticallyImplyLeading: false,
-                      backgroundColor: colorAppBar,
-                      elevation: 0,
-                      centerTitle: true,
-                      title: Text("Crear Nodo", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
+              clipBehavior: Clip.hardEdge,
+              child: GestureDetector(
+                onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
 
-                    ),
+                      // _____________________________________________________HEADER_____________________________________________________
+                      AppBar(
+                        automaticallyImplyLeading: false,
+                        backgroundColor: mainBlue,
+                        elevation: 0,
+                        toolbarHeight: 70.h,
+                        centerTitle: true,
+                        title: Text("Nuevo nodo", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
 
-                    Divider(
-                      color: Colors.grey,
-                      thickness: 3.r,
-                      indent: 20.w,
-                      endIndent: 20.w,
-                    ),
+                      ),
 
-                    //Nombre del Nodo
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                      child: Text("Nombre: ", style: TextStyle(color: Colors.black, fontSize: 20.sp, fontWeight: FontWeight.bold),)
-                    ),
-
-                    SizedBox(height: 10.h,),
-
-                    if(empty) ...[
+                      // _____________________________________________________BODY_____________________________________________________
                       Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h)
-                        ,child:Text(
-                        'Por favor, selecciona un nombre.',
-                        style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
-                        textAlign: TextAlign.center,
-                      ),
-                      ),
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+
+                            //Nombre del Nodo
+                            Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 0.h),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: Text(
+                                    "Nombre: ",
+                                    textAlign: TextAlign.start,
+                                    style: TextStyle(color: Colors.black, fontSize: 20.sp, fontWeight: FontWeight.bold),),
+                                )
+                            ),
+
+                            SizedBox(height: 5.h,),
+
+                            if(empty) ...[
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                                child:Text(
+                                  'Por favor, selecciona un nombre.',
+                                  style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ),
+                            ],
+                            if(exist) ...[
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h)
+                                ,child:Text(
+                                'Ya existe un nodo con ese nombre.\nEscriba uno diferente.',
+                                style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
+                                textAlign: TextAlign.center,
+                              ),
+                              ),
+                            ],
+
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                              child: TextField(
+                                onTap: () {
+                                  setState(() {
+                                    hintNameColor = Colors.black26;
+                                    nameColor = mainBlue;
+                                    exist = false;
+                                    empty = false;
+                                  });
+                                },
+                                controller: nodeNameController,
+                                style: TextStyle(color: nameColor),
+                                maxLength: 25,
+                                maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                                decoration: InputDecoration(
+                                  counterStyle: TextStyle(
+                                    color: nodeNameController.text.length >= 25 ? redAlert : Colors.black26,
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  hintText: "Inserte un nombre...",
+                                  hintStyle: TextStyle(color: hintNameColor, fontSize: 15.sp),
+                                  filled: true,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(6.r),
+                                    borderSide: BorderSide.none,
+                                  ),
+
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+
+                                ),
+
+                                cursorColor: nodeNameController.text.length >= 25 ? redAlert : cursorColor,
+
+                              ),
+                            ),
+
+                            //Contenido del nodo
+
+                            Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 0.h),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: Text(
+                                    "Contenido: ",
+                                    textAlign: TextAlign.start,
+                                    style: TextStyle(color: Colors.black, fontSize: 20.sp, fontWeight: FontWeight.bold),),
+                                )
+                            ),
+
+                            SizedBox(height: 5.h,),
+
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                              child: TextField(
+                                controller: nodeContentController,
+                                cursorColor: cursorColor,
+                                minLines: 1,
+                                maxLines: 3,
+                                style: TextStyle(color: mainBlue),
+                                decoration: InputDecoration(
+                                  counterStyle: TextStyle(
+                                    color: Colors.black26,
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  hintText: "(Opcional)",
+                                  hintStyle: TextStyle(color: Colors.black26, fontSize: 15.sp),
+                                  filled: true,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(6.r),
+                                    borderSide: BorderSide.none,
+                                  ),
+
+
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+
+                                ),
+                              ),
+                            ),
+
+                            Divider(
+                              color: Colors.grey,
+                              thickness: 3.r,
+                              indent: 20.w,
+                              endIndent: 20.w,
+                            ),
+
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    //Comprobamos si se escogió un nombre
+                                    if(nodeNameController.text.isEmpty){
+                                      setState(() {
+                                        hintNameColor = redAlert;
+                                        empty = true;
+                                      });
+                                      return;
+                                    }else{
+                                      empty = false;
+                                    }
+
+                                    if(nodeList.any((n) => n.title == nodeNameController.text.trim())){
+                                      setState(() {
+                                        nameColor = redAlert;
+                                        exist = true;
+                                      });
+                                      return;
+                                    }else{
+                                      exist = false;
+                                    }
+
+                                    Navigator.pop(dialogContext);
+                                    if(!context.mounted) return;
+
+                                    if(nodeContentController.text.isEmpty){
+                                      AlertHelper.showSnakbar(context, 'Nodo creado sin contenido', 3, backgroundWhite, Colors.black);
+                                    }else{
+                                      AlertHelper.showSnakbar(context, 'Se ha creado el nodo: ${nodeNameController.text}', 3, backgroundWhite, Colors.black);
+                                    }
+                                    onConfirm(nodeNameController.text.trim(), nodeContentController.text);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: mainBlue,
+                                    elevation: 0,
+                                    minimumSize: Size(double.infinity, 50.r),
+                                    padding: EdgeInsets.all(10.r),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                  ),
+                                  child: Text("Confirmar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            )
+
+                          ],
+                        ),
+                      )
+
                     ],
-                    if(exist) ...[
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h)
-                        ,child:Text(
-                        'Ya existe un nodo con ese nombre.\nEscriba uno diferente.',
-                        style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
-                        textAlign: TextAlign.center,
-                      ),
-                      ),
-                    ],
-
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                      child: TextField(
-                        onTap: () {
-                          setState(() {
-                            hintNameColor = Colors.black26;
-                            nameColor = mainBlue;
-                          });
-                        },
-                        controller: nodeNameController,
-                        style: TextStyle(color: nameColor),
-                        maxLength: 25,
-                        maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                        decoration: InputDecoration(
-                          counterStyle: TextStyle(
-                            color: nodeNameController.text.length >= 25 ? redAlert : Colors.black26,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          hintText: "Inserte un nombre...",
-                          hintStyle: TextStyle(color: hintNameColor, fontSize: 15.sp),
-                          filled: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(6.r),
-                            borderSide: BorderSide.none,
-                          ),
-
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-
-                        ),
-
-                        cursorColor: nodeNameController.text.length >= 25 ? redAlert : cursorColor,
-
-                      ),
-                    ),
-
-                    //Contenido del nodo
-
-                    Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                        child: Text("Contenido: ", style: TextStyle(color: Colors.black, fontSize: 20.sp, fontWeight: FontWeight.bold),)
-                    ),
-
-                    SizedBox(height: 10.h,),
-
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                      child: TextField(
-                        controller: nodeContentController,
-                        cursorColor: cursorColor,
-                        minLines: 1,
-                        maxLines: 3,
-                        style: TextStyle(color: mainBlue),
-                        decoration: InputDecoration(
-                          counterStyle: TextStyle(
-                            color: Colors.black26,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          hintText: "(Opcional)",
-                          hintStyle: TextStyle(color: Colors.black26, fontSize: 15.sp),
-                          filled: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(6.r),
-                            borderSide: BorderSide.none,
-                          ),
-
-
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-
-                        ),
-                      ),
-                    ),
-
-                    Divider(
-                      color: Colors.grey,
-                      thickness: 3.r,
-                      indent: 20.w,
-                      endIndent: 20.w,
-                    ),
-
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            //Comprobamos si se escogió un nombre
-                            if(nodeNameController.text.isEmpty){
-                              setState(() {
-                                nameColor = redAlert;
-                                empty = true;
-                              });
-                              return;
-                            }
-
-                            if(nodeList.any((n) => n.title == nodeNameController.text)){
-                              setState(() {
-                                nameColor = redAlert;
-                                exist = true;
-                              });
-                              return;
-                            }
-
-                            Navigator.pop(dialogContext);
-                            if(!context.mounted) return;
-
-                            if(nodeContentController.text.isEmpty){
-                              AlertHelper.showSnakbar(context, 'Nodo creado sin contenido', 3, backgroundWhite, Colors.black);
-                            }else{
-                              AlertHelper.showSnakbar(context, 'Se ha creado el nodo: ${nodeNameController.text}', 3, backgroundWhite, Colors.black);
-                            }
-                            onConfirm(nodeNameController.text, nodeContentController.text);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: mainPurple,
-                            elevation: 0,
-                            minimumSize: Size(double.infinity, 50.r),
-                            padding: EdgeInsets.all(10.r),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
-                          ),
-                          child: Text("Confirmar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-                    )
-
-                  ],
+                  ),
                 ),
               )
             )
@@ -950,8 +996,414 @@ class AppDialogs{
     );
   }
 
-  static void showCreateEdgeDialog(){
+  static void showCreateEdgeDialog(
+      BuildContext context,
+      List<NodeEntity> nodeList,
+      List<EdgeEntity> edgeList,
+      NodeEntity? fixedOrigin,
+      NodeEntity? fixedDestination,
+      Function(EdgeEntity) onConfirm
+      ){
+    final TextEditingController originNodeController = TextEditingController();
+    final TextEditingController destinationNodeController = TextEditingController();
+    final TextEditingController typeController = TextEditingController();
 
+    bool hasType = false;
+    bool hasOrigin = false;
+    bool hasDestination = false;
+    bool exist = false;
+
+    Color hintTypeColor = Colors.black38;
+    Color hintOriginColor = Colors.black38;
+    Color hintDestinationColor = Colors.black38;
+    Color existColor = Colors.black;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+          builder: (builderContext, setState) => Dialog(
+              insetPadding: EdgeInsets.symmetric(horizontal: 15.w),
+              backgroundColor: backgroundWhite,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.r),
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: GestureDetector(
+                onTap: ()=> FocusManager.instance.primaryFocus?.unfocus(),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+
+                      // _____________________________________________________HEADER_____________________________________________________
+                      AppBar(
+                          automaticallyImplyLeading: false,
+                          backgroundColor: mainBlue,
+                          elevation: 0,
+                          toolbarHeight: 90.h,
+                          centerTitle: true,
+                          title: fixedOrigin == null && fixedDestination == null ?
+                          Column(
+                            children: [
+                              Text("Nueva relación", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
+                              Text("Conecta dos nodos", style: TextStyle(color: Colors.white24, fontSize: 14.sp, fontWeight: FontWeight.bold))
+                            ],
+                          )
+                              : fixedOrigin != null ?
+                          Column(
+                            children: [
+                              Text("Nueva relación saliente", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
+                              Text("Desde este nodo a otro", style: TextStyle(color: Colors.white24, fontSize: 14.sp, fontWeight: FontWeight.bold))
+                            ],
+                          )
+                              : Column(
+                            children: [
+                              Text("Nueva relación entrante", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
+                              Text("Desde otro nodo a este", style: TextStyle(color: Colors.white24, fontSize: 14.sp, fontWeight: FontWeight.bold))
+                            ],
+                          )
+                      ),
+
+                      // _____________________________________________________BODY_____________________________________________________
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
+                        child: Column(
+                          children: [
+
+                            //Nodo origen
+                            Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 0.h),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: Text(
+                                    fixedOrigin != null? "Origen - FIJO" : "Origen:",
+                                    textAlign: TextAlign.start,
+                                    style: TextStyle(color: mainPurple, fontSize: 20.sp, fontWeight: FontWeight.bold),),
+                                )
+                            ),
+
+                            SizedBox(height: 5.h,),
+
+                            if(hasOrigin)...[
+                              Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 0.h),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    child: Text(
+                                      "Por favor, escoge un nodo origen",
+                                      style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
+                                      textAlign: TextAlign.center,
+                                    )
+                                  )
+                              ),
+                            ],
+
+                            Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                                child: fixedOrigin == null ?
+                                NodeSearchAutocomplete(
+                                  nodeList: fixedDestination == null ? nodeList
+                                      : nodeList.where((n) => n.id != fixedDestination.id).toList(),
+                                  nodeController: originNodeController,
+                                  style: NodeSearchStyle(
+                                    hintColor: hintOriginColor,
+                                    textColor: existColor,
+                                  ),
+                                  onTap: (){
+                                    setState(() {
+                                      hintOriginColor = Colors.black38;
+                                      existColor = Colors.black;
+                                      hasOrigin = false;
+                                    });
+                                  },
+                                )
+                                    :Container(
+                                    height: 60.h,
+                                    width: double.infinity,
+                                    padding: EdgeInsets.symmetric(horizontal: 14.w),
+                                    alignment: Alignment.centerLeft,
+                                    decoration: BoxDecoration(
+                                        color: mainPurple.withAlpha(30),
+                                        borderRadius: BorderRadius.circular(12.r),
+                                        border: Border.all(color: mainPurple, width: 2.w)
+                                    ),
+                                    child: Text(fixedOrigin.title, style: TextStyle(fontSize: 16.sp),)
+                                )
+                            ),
+
+                            SizedBox(height: 10.h,),
+
+                            Icon(
+                              Icons.arrow_downward,
+                              size: 32.r,
+                              color: fixedOrigin != null ? mainPurple : fixedDestination != null ? mainGreen : mainBlue,
+                            ),
+
+
+                            //Nodo Destino
+
+                            Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 0.h),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: Text(
+                                    fixedDestination != null? "Destino - FIJO" : "Destino:",
+                                    textAlign: TextAlign.start,
+                                    style: TextStyle(color: mainGreen, fontSize: 20.sp, fontWeight: FontWeight.bold),),
+                                )
+                            ),
+
+                            SizedBox(height: 5.h,),
+
+                            if(hasDestination)...[
+                              Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 0.h),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    child: Text(
+                                      "Por favor, escoge un nodo destino",
+                                        style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
+                                        textAlign: TextAlign.center,
+                                    ),
+                                  )
+                              ),
+                            ],
+
+                            Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                                child: fixedDestination == null ?
+                                NodeSearchAutocomplete(
+                                  nodeList: fixedOrigin == null ? nodeList
+                                      : nodeList.where((n) => n.id != fixedOrigin.id).toList(),
+                                  nodeController: destinationNodeController,
+                                  style: NodeSearchStyle(
+                                    hintColor: hintDestinationColor,
+                                    textColor: existColor,
+                                  ),
+                                  onTap: (){
+                                    setState(() {
+                                      hintDestinationColor = Colors.black38;
+                                      existColor = Colors.black;
+                                      hasDestination = false;
+                                    });
+                                  },
+                                )
+                                    :Container(
+                                    height: 60.h,
+                                    width: double.infinity,
+                                    padding: EdgeInsets.symmetric(horizontal: 14.w),
+                                    alignment: Alignment.centerLeft,
+                                    decoration: BoxDecoration(
+                                        color: mainGreen.withAlpha(30),
+                                        borderRadius: BorderRadius.circular(12.r),
+                                        border: Border.all(color: mainGreen, width: 2.w)
+                                    ),
+                                    child: Text(fixedDestination.title, style: TextStyle(fontSize: 16.sp),)
+                                )
+                            ),
+
+                            SizedBox(height: 10.h,),
+
+                            //Tipo de relación
+
+                            Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 0.h),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: Text(
+                                    "Tipo de relación:",
+                                    textAlign: TextAlign.start,
+                                    style: TextStyle(color: mainBlue, fontSize: 20.sp, fontWeight: FontWeight.bold),),
+                                )
+                            ),
+
+                            SizedBox(height: 5.h,),
+
+                            if(hasType)...[
+                              Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 0.h),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    child: Text(
+                                      "Por favor, escribe el tipo de relación",
+                                        style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
+                                        textAlign: TextAlign.center,
+                                    ),
+                                  )
+                              ),
+                            ],
+
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20.w),
+                              child: Container(
+                                height: 60.h,
+                                padding: EdgeInsets.symmetric(horizontal: 14.w),
+                                decoration: BoxDecoration(
+                                    color: Colors.white38,
+                                    borderRadius: BorderRadius.circular(12.r),
+                                    border: Border.all(color: Colors.black12, width: 2.w)
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(Icons.link, size: 20.r, color: hintTypeColor,),
+                                    SizedBox(width: 5.w,),
+                                    Expanded(
+                                        child: TextField(
+                                          onTap: () {
+                                            setState(() {
+                                              hintTypeColor = Colors.black38;
+                                              existColor = Colors.black;
+                                              hasType = false;
+                                            });
+                                          },
+                                          controller: typeController,
+                                          style: TextStyle(color: existColor),
+                                          maxLength: 25,
+                                          maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                                          decoration: InputDecoration(
+                                            counterText: "",
+                                            isDense: true,
+                                            border: InputBorder.none,
+                                            hintText: "Escribe el tipo",
+                                            hintStyle: TextStyle(color: hintTypeColor, fontSize: 16.sp),
+                                            suffix: Text(
+                                              "${typeController.text.length}/25",
+                                              style: TextStyle(
+                                                  color: typeController.text.length >= 25 ? redAlert : Colors.black26,
+                                                  fontSize: 12.sp,
+                                                  fontWeight: FontWeight.bold,
+                                              )
+                                            ),
+                                          ),
+                                          cursorColor: typeController.text.length >= 25 ? redAlert : cursorColor,
+                                          onChanged: (_){
+                                            setState((){});
+                                          },
+                                        )
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            if(exist)...[
+                              Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 0.h),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    child: Text(
+                                      "Ya existe una relación igual a esta\nEscoge otros nodos o cambia el tipo",
+                                      textAlign: TextAlign.start,
+                                      style: TextStyle(color: redAlert, fontSize: 20.sp, fontWeight: FontWeight.bold),),
+                                  )
+                              ),
+                            ],
+
+                            Divider(
+                              color: Colors.grey,
+                              thickness: 3.r,
+                              indent: 20.w,
+                              endIndent: 20.w,
+                            ),
+
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    //Comprobamos nodo origen
+                                    if(fixedOrigin == null){
+                                      if(originNodeController.text.isEmpty){
+                                        setState(() {
+                                          hasOrigin = true;
+                                          hintOriginColor = redAlert;
+                                        });
+                                        return;
+                                      }
+                                    }else{
+                                      hasOrigin = false;
+                                    }
+
+                                    //Comprobamos nodo destino
+                                    if(fixedDestination == null){
+                                      if(destinationNodeController.text.isEmpty){
+                                        setState(() {
+                                          hasDestination = true;
+                                          hintDestinationColor = redAlert;
+                                        });
+                                        return;
+                                      }
+                                    }else{
+                                      hasDestination = false;
+                                    }
+
+                                    //Comprobamos tipo de relación
+                                    if(typeController.text.isEmpty){
+                                      setState(() {
+                                        hasType = true;
+                                        hintTypeColor = redAlert;
+                                      });
+                                      return;
+                                    }else{
+                                      hasType = false;
+                                    }
+
+                                    final newEdge = EdgeEntity(
+                                        from: fixedOrigin != null? fixedOrigin.title : originNodeController.text.trim(),
+                                        to: fixedDestination != null? fixedDestination.title : destinationNodeController.text.trim(),
+                                        type: typeController.text.trim()
+                                    );
+
+                                    //Comprobamos si ya exsiste la relación
+
+                                    if(edgeList.any(
+                                            (e) => e.from == newEdge.from &&
+                                                e.type == newEdge.type &&
+                                                e.to == newEdge.to)
+                                    ){
+                                      setState(() {
+                                        exist = true;
+                                        existColor = redAlert;
+                                      });
+                                      return;
+                                    }else{
+                                      exist = false;
+                                    }
+
+                                    Navigator.pop(dialogContext);
+                                    if(!context.mounted) return;
+
+                                    AlertHelper.showSnakbar(
+                                        context,
+                                        'Se ha creado la relación:\n"${newEdge.from} -> [${newEdge.type}] -> ${newEdge.to}"',
+                                        3, backgroundWhite, Colors.black);
+
+                                    onConfirm(newEdge);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: mainBlue,
+                                    elevation: 0,
+                                    minimumSize: Size(double.infinity, 50.r),
+                                    padding: EdgeInsets.all(10.r),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                  ),
+                                  child: Text("Confirmar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
+                      )
+
+
+                    ],
+                  ),
+                ),
+              )
+          )
+      ),
+    );
   }
 
   static void showDeleteNodeDialog(BuildContext context, NodeEntity node, Function() onConfirm ){
@@ -963,108 +1415,243 @@ class AppDialogs{
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(15.r),
           ),
-          child: Padding(
-            padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
+          clipBehavior: Clip.hardEdge,
+          child: GestureDetector(
+            onTap: ()=> FocusManager.instance.primaryFocus?.unfocus(),
+            child: SingleChildScrollView(
+              child: Column(
+                children: [
+                  // _____________________________________________________HEADER_____________________________________________________
+                  AppBar(
+                    automaticallyImplyLeading: false,
+                    backgroundColor: redAlert,
+                    elevation: 0,
+                    toolbarHeight: 70.h,
+                    centerTitle: true,
+                    title: Text("Eliminar nodo", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
+                  ),
 
-                AppBar(
-                  automaticallyImplyLeading: false,
-                  backgroundColor: redAlert,
-                  elevation: 0,
-                  centerTitle: true,
-                  title: Text("Eliminar nodo", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
+                  // _____________________________________________________BODY_____________________________________________________
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
 
-                ),
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 30.w),
+                          child: Text(
+                            "Eliminar el nodo lo borrará del grafo junto a su contenido y todas las relaciones con otros nodos.",
+                            style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.justify,
+                          ),
+                        ),
 
-                Divider(
-                  color: Colors.grey,
-                  thickness: 3.r,
-                  indent: 20.w,
-                  endIndent: 20.w,
-                ),
+                        SizedBox(height: 10.h,),
 
-                SizedBox(height: 10.h,),
+                        Divider(
+                          color: Colors.grey,
+                          thickness: 3.r,
+                          indent: 20.w,
+                          endIndent: 20.w,
+                        ),
 
-                Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 30.w),
-                    child: Text(
-                      "Eliminar el nodo lo borrará del grafo junto a su contenido y todas las relaciones con otros nodos.",
-                      style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
-                      textAlign: TextAlign.justify,
+                        SizedBox(height: 10.h,),
+
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 30.w),
+                          child: Text(
+                            '¿Estás seguro de eliminar este nodo?',
+                            style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold),
+                            textAlign: TextAlign.center,
+                          ),
+                        ),
+
+                        SizedBox(height: 15.h,),
+
+                        Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                          child:
+                          Row(
+                            children: [
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    AlertHelper.showSnakbar(context, 'Se ha cancelado la operación "ELIMINAR"', 3, backgroundWhite, Colors.black);
+                                    Navigator.pop(context);
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: g2,
+                                    elevation: 0,
+                                    minimumSize: Size(double.infinity, 50.r),
+                                    padding: EdgeInsets.all(10.r),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                  ),
+                                  child: Text("Cancelar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+
+                              SizedBox(
+                                width: 10.w,
+                              ),
+
+                              Expanded(
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    Navigator.pop(dialogContext);
+                                    if(!context.mounted) return;
+                                    AlertHelper.showSnakbar(context, 'Se ha ELIMINADO el nodo "${node.title}"', 5, redAlert, Colors.white);
+                                    onConfirm();
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.redAccent,
+                                    elevation: 0,
+                                    minimumSize: Size(double.infinity, 50.r),
+                                    padding: EdgeInsets.all(10.r),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                  ),
+                                  child: Text("ELIMINAR", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            ],
+                          ),
+                        )
+                      ],
                     ),
-                ),
-
-                SizedBox(height: 20.h,),
-
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 30.w),
-                  child: Text(
-                    '¿Estás seguro de eliminar "${node.title}"?',
-                    style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold),
-                    textAlign: TextAlign.center,
                   ),
-                ),
-
-                SizedBox(height: 15.h,),
-
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                  child:
-                  Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            AlertHelper.showSnakbar(context, 'Se ha cancelado la operación "ELIMINAR"', 3, backgroundWhite, Colors.black);
-                            Navigator.pop(context);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: g2,
-                            elevation: 0,
-                            minimumSize: Size(double.infinity, 50.r),
-                            padding: EdgeInsets.all(10.r),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
-                          ),
-                          child: Text("Cancelar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-
-                      SizedBox(
-                        width: 10.w,
-                      ),
-
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            Navigator.pop(dialogContext);
-                            if(!context.mounted) return;
-                            AlertHelper.showSnakbar(context, 'Se ha ELIMINADO el nodo "${node.title}"', 5, redAlert, Colors.white);
-                            onConfirm();
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.redAccent,
-                            elevation: 0,
-                            minimumSize: Size(double.infinity, 50.r),
-                            padding: EdgeInsets.all(10.r),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
-                          ),
-                          child: Text("ELIMINAR", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
-                        ),
-                      ),
-                    ],
-                  ),
-                )
-              ],
+                ],
+              ),
             ),
-          ),
+          )
         )
     );
   }
 
-  static void showDeleteEdgeDialog(){
+  static void showDeleteEdgeDialog(BuildContext context, EdgeEntity edge, Function() onConfirm){
 
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+          builder: (builderContext, setState) => Dialog(
+              insetPadding: EdgeInsets.symmetric(horizontal: 15.w),
+              backgroundColor: backgroundWhite,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.r),
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: GestureDetector(
+                onTap: ()=> FocusManager.instance.primaryFocus?.unfocus(),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+
+                      // _____________________________________________________HEADER_____________________________________________________
+                      AppBar(
+                          automaticallyImplyLeading: false,
+                          backgroundColor: redAlert,
+                          elevation: 0,
+                          toolbarHeight: 70.h,
+                          centerTitle: true,
+                          title: Text("Eliminar relación", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
+                      ),
+
+                      // _____________________________________________________BODY_____________________________________________________
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
+                        child: Column(
+                          children: [
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 30.w),
+                              child: Text(
+                                'Eliminar la relación borrará del registro la conexión que tiene con el otro nodo.',
+                                style: TextStyle(fontSize: 20.sp, fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.justify,
+                              ),
+                            ),
+
+                            SizedBox(height: 10.h,),
+
+                            Divider(
+                              color: Colors.grey,
+                              thickness: 3.r,
+                              indent: 20.w,
+                              endIndent: 20.w,
+                            ),
+
+                            SizedBox(height: 10.h,),
+
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 30.w),
+                              child: Text(
+                                '¿Estás seguro de eliminar la relación?',
+                                style: TextStyle(fontSize: 22.sp, fontWeight: FontWeight.bold),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+
+                            SizedBox(height: 15.h,),
+
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                              child:
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      onPressed: () async {
+                                        AlertHelper.showSnakbar(context, 'Se ha cancelado la operación "ELIMINAR"', 3, backgroundWhite, Colors.black);
+                                        Navigator.pop(context);
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: g2,
+                                        elevation: 0,
+                                        minimumSize: Size(double.infinity, 50.r),
+                                        padding: EdgeInsets.all(10.r),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                      ),
+                                      child: Text("Cancelar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ),
+
+                                  SizedBox(
+                                    width: 10.w,
+                                  ),
+
+                                  Expanded(
+                                    child: ElevatedButton(
+                                      onPressed: () async {
+                                        Navigator.pop(dialogContext);
+                                        if(!context.mounted) return;
+                                        AlertHelper.showSnakbar(
+                                            context,
+                                            'Se ha ELIMINADO la relación\n"${edge.from} -> [${edge.type}] -> ${edge.to}"'
+                                            , 5, redAlert, Colors.white);
+                                        onConfirm();
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: Colors.redAccent,
+                                        elevation: 0,
+                                        minimumSize: Size(double.infinity, 50.r),
+                                        padding: EdgeInsets.all(10.r),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                      ),
+                                      child: Text("ELIMINAR", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            )
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+          )
+      ),
+    );
   }
 
   static void showRenameNodeDialog(BuildContext context, List<NodeEntity> nodeList, NodeEntity node, Function(String nodeName) onConfirm){
@@ -1085,138 +1672,161 @@ class AppDialogs{
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(15.r),
               ),
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    AppBar(
-                      automaticallyImplyLeading: false,
-                      backgroundColor: colorAppBar,
-                      elevation: 0,
-                      centerTitle: true,
-                      title: Text("Renombrar Nodo", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
-
-                    ),
-
-                    Divider(
-                      color: Colors.grey,
-                      thickness: 3.r,
-                      indent: 20.w,
-                      endIndent: 20.w,
-                    ),
-
-                    Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                        child: Text("Nombre actual:\n${node.title} ", style: TextStyle(color: Colors.black, fontSize: 20.sp, fontWeight: FontWeight.bold),)
-                    ),
-
-                    SizedBox(height: 10.h,),
-
-                    if(empty) ...[
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h)
-                        ,child:Text(
-                        'Por favor, selecciona un nombre.',
-                        style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
-                        textAlign: TextAlign.center,
-                      ),
-                      ),
-                    ],
-                    if(exist) ...[
-                      Padding(
-                        padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h)
-                        ,child:Text(
-                        'Ya existe un nodo con ese nombre.\nEscriba uno diferente.',
-                        style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
-                        textAlign: TextAlign.center,
-                      ),
-                      ),
-                    ],
-
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                      child: TextField(
-                        onTap: () {
-                          setState(() {
-                            hintNameColor = Colors.black26;
-                            nameColor = mainBlue;
-                          });
-                        },
-                        controller: nodeNameController,
-                        style: TextStyle(color: nameColor),
-                        maxLength: 25,
-                        maxLengthEnforcement: MaxLengthEnforcement.enforced,
-                        decoration: InputDecoration(
-                          counterStyle: TextStyle(
-                            color: nodeNameController.text.length >= 25 ? redAlert : Colors.black26,
-                            fontSize: 12.sp,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          hintText: "Inserte un nuevo nombre...",
-                          hintStyle: TextStyle(color: hintNameColor, fontSize: 15.sp),
-                          filled: true,
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(6.r),
-                            borderSide: BorderSide.none,
-                          ),
-
-                          contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
-
+              clipBehavior: Clip.hardEdge,
+              child: GestureDetector(
+                onTap: ()=> FocusManager.instance.primaryFocus?.unfocus(),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // _____________________________________________________HEADER_____________________________________________________
+                      AppBar(
+                        iconTheme: IconThemeData(
+                            color: Colors.white
                         ),
-
-                        cursorColor: nodeNameController.text.length >= 25 ? redAlert : cursorColor,
+                        backgroundColor: mainPurple,
+                        elevation: 0,
+                        toolbarHeight: 70.h,
+                        centerTitle: true,
+                        title: Text("Renombrar Nodo", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
                       ),
-                    ),
 
-                    Divider(
-                      color: Colors.grey,
-                      thickness: 3.r,
-                      indent: 20.w,
-                      endIndent: 20.w,
-                    ),
+                      // _____________________________________________________BODY_____________________________________________________
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
 
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: () async {
-                            //Comprobamos si se escogió un nombre
-                            if(nodeNameController.text.isEmpty){
-                              setState(() {
-                                nameColor = redAlert;
-                                empty = true;
-                              });
-                              return;
-                            }
+                            Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 35.w, vertical: 0.h),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child:Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "Nombre actual:",
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(color: Colors.black, fontSize: 20.sp, fontWeight: FontWeight.bold),),
+                                        Text(
+                                          '"${node.title}"',
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(color: mainPurple, fontSize: 20.sp, fontWeight: FontWeight.bold),),
+                                      ]
+                                  ),
+                                )
+                            ),
 
-                            if(nodeList.any((n) => n.title == nodeNameController.text.trim())){
-                              setState(() {
-                                nameColor = redAlert;
-                                exist = true;
-                              });
-                              return;
-                            }
+                            SizedBox(height: 10.h,),
 
-                            Navigator.pop(dialogContext);
-                            if(!context.mounted) return;
+                            if(empty) ...[
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h)
+                                ,child:Text(
+                                'Por favor, selecciona un nombre.',
+                                style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
+                                textAlign: TextAlign.center,
+                              ),
+                              ),
+                            ],
+                            if(exist) ...[
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h)
+                                ,child:Text(
+                                'Ya existe un nodo con ese nombre.\nEscriba uno diferente.',
+                                style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
+                                textAlign: TextAlign.center,
+                              ),
+                              ),
+                            ],
 
-                            onConfirm(nodeNameController.text);
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: mainPurple,
-                            elevation: 0,
-                            minimumSize: Size(double.infinity, 50.r),
-                            padding: EdgeInsets.all(10.r),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
-                          ),
-                          child: Text("Confirmar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                              child: TextField(
+                                onTap: () {
+                                  setState(() {
+                                    hintNameColor = Colors.black26;
+                                    nameColor = mainBlue;
+                                  });
+                                },
+                                controller: nodeNameController,
+                                style: TextStyle(color: nameColor),
+                                maxLength: 25,
+                                maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                                decoration: InputDecoration(
+                                  counterStyle: TextStyle(
+                                    color: nodeNameController.text.length >= 25 ? redAlert : Colors.black26,
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  hintText: "Inserte un nuevo nombre...",
+                                  hintStyle: TextStyle(color: hintNameColor, fontSize: 15.sp),
+                                  filled: true,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(6.r),
+                                    borderSide: BorderSide.none,
+                                  ),
+
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+
+                                ),
+
+                                cursorColor: nodeNameController.text.length >= 25 ? redAlert : cursorColor,
+                              ),
+                            ),
+
+                            Divider(
+                              color: Colors.grey,
+                              thickness: 3.r,
+                              indent: 20.w,
+                              endIndent: 20.w,
+                            ),
+
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    //Comprobamos si se escogió un nombre
+                                    if(nodeNameController.text.isEmpty){
+                                      setState(() {
+                                        nameColor = redAlert;
+                                        empty = true;
+                                      });
+                                      return;
+                                    }
+
+                                    if(nodeList.any((n) => n.title == nodeNameController.text.trim())){
+                                      setState(() {
+                                        nameColor = redAlert;
+                                        exist = true;
+                                      });
+                                      return;
+                                    }
+
+                                    Navigator.pop(dialogContext);
+                                    if(!context.mounted) return;
+
+                                    onConfirm(nodeNameController.text.trim());
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: mainBlue,
+                                    elevation: 0,
+                                    minimumSize: Size(double.infinity, 50.r),
+                                    padding: EdgeInsets.all(10.r),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                  ),
+                                  child: Text("Confirmar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            )
+
+                          ],
                         ),
-                      ),
-                    )
-
-                  ],
+                      )
+                    ],
+                  ),
                 ),
               )
           )

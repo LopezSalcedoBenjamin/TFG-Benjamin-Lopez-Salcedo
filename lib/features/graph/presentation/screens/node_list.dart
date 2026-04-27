@@ -12,7 +12,7 @@ import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presen
 import '../../../../consts.dart';
 import '../../../../data/datasources/graph_file_datasource.dart';
 import '../widgets/file_Manager.dart';
-import '../widgets/widget_buttons.dart';
+import '../widgets/list_button.dart';
 
 enum SortMode {nameAZ, nameZA}
 
@@ -238,55 +238,6 @@ class _NodeListState extends State<NodeList> {
                         fillColor: blackGraph2,
                       ),
                   );
-                  /*Padding(
-                    padding: EdgeInsets.only(bottom: 10.h),
-                    child: Container(
-                      height: itemSize.h,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(15.r),
-                        border: Border.all(color: Colors.white24, width: 2.w),
-                      ),
-                      child: Row(
-                        children: [
-                          Expanded(
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (c) => NodeMenu(
-                                      node: node,
-                                      graphPath: widget.graphPath,)
-                                    )
-                                ).then((_) => _loadNodes());
-                              },
-                              onLongPress: () async {
-
-                              },
-                              style: ElevatedButton.styleFrom(
-                                  elevation: 0,
-                                  backgroundColor: blackGraph2,
-                                  minimumSize: Size(double.infinity, double.infinity),
-                                  alignment: Alignment.centerLeft,
-                                  padding: EdgeInsets.all(18.r),
-                                  shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(12.r)
-                                  )
-                              ),
-                              child: Text(
-                                node.title.length > 25
-                                    ? "${node.title.substring(0, 25)}..."
-                                    : node.title,
-                                style: TextStyle(color: Colors.white, fontSize: 15.sp),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                          ),
-
-                        ],
-                      ),
-                    ),
-                  );*/
                 },
               ),
             ),

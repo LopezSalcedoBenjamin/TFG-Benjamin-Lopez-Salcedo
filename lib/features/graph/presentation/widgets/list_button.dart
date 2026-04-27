@@ -8,6 +8,7 @@ class ListButton extends StatelessWidget {
   final String appendix;
   final double height;
   final Color fillColor;
+  final Widget? trailing;
 
   const ListButton({
     super.key,
@@ -15,6 +16,7 @@ class ListButton extends StatelessWidget {
     required this.appendix,
     required this.height,
     required this.fillColor,
+    this.trailing,
   });
 
   @override
@@ -53,6 +55,7 @@ class ListButton extends StatelessWidget {
                 ),
               ),
             ),
+            if(trailing != null) trailing!
           ],
         ),
       ),

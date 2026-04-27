@@ -214,10 +214,10 @@ class _CreateGraphState extends State<CreateGraph>{
                               return;
                             }
 
-                            if(Directory("$_locGraph/${_nameGraphController.text}").existsSync()){
+                            if(Directory("$_locGraph/${_nameGraphController.text.trim()}").existsSync()){
                               AlertHelper.showSnakbar(
                                   context,
-                                  'Ya existe un grafo o carpeta con nombre "${_nameGraphController.text}" en la ruta seleccionada. Por favor escoja un nombre o localización diferentes'
+                                  'Ya existe un grafo o carpeta con nombre "${_nameGraphController.text.trim()}" en la ruta seleccionada. Por favor escoja un nombre o localización diferentes'
                                   , 5, redAlert, Colors.white);
 
                               setState(() => _nameColor = redAlert );
@@ -226,9 +226,9 @@ class _CreateGraphState extends State<CreateGraph>{
                               return;
                             }
 
-                            final newGraphPath = '$_locGraph/${_nameGraphController.text}';
+                            final newGraphPath = '$_locGraph/${_nameGraphController.text.trim()}';
 
-                            await createGraph(_nameGraphController.text, _locGraph!, _imgLogo);
+                            await createGraph(_nameGraphController.text.trim(), _locGraph!, _imgLogo);
                             await FileManager.saveGraphs(newGraphPath);
                             await FileManager.saveLastAccessedTime(newGraphPath);
                             if (!mounted) return;

@@ -160,10 +160,16 @@ class _ManageGraphState extends State<ManageGraph>{
                                       context,
                                       _locGraph,
                                       _graphName,
-                                      (newName){
+                                      (newName) async {
+                                        final l = await FileManager.loadFavorites();
+                                        final String newPath = await FileManager.renameDirectory(_locGraph, newName);
+                                        await FileManager.renameFile('$newPath/$_graphName.json', '$newName.json');
+                                        if(l.contains(_locGraph)) await FileManager.toggleFavorite(newPath);
+                                        await FileManager.purgeFromFavorites(_locGraph);
+                                        await FileManager.removeGraphs(_locGraph);
+                                        await FileManager.saveGraphs(newPath);
                                         setState((){
                                           _graphName = newName;
-                                          final newPath = '${_locGraph.substring(0, _locGraph.lastIndexOf('/'))}/$newName';
                                           _locGraph = newPath;
                                           final logoFile = File('$newPath/logo.png');
                                           _imgLogo = logoFile.existsSync() ? logoFile : null;
@@ -217,11 +223,19 @@ class _ManageGraphState extends State<ManageGraph>{
                                   AppDialogs.showChangeLocationDialog(
                                       context,
                                       _locGraph,
-                                      (newPath){
+                                      (newPath) async {
+                                        final l = await FileManager.loadFavorites();
+                                        final selectedPath = await FileManager.moveDirectory(_locGraph, newPath);
+                                        if (l.contains(_locGraph)){
+                                          await FileManager.toggleFavorite(selectedPath);
+                                        }
+                                        await FileManager.purgeFromFavorites(_locGraph);
+                                        await FileManager.removeGraphs(_locGraph);
+                                        await FileManager.saveGraphs(selectedPath);
                                         setState((){
-                                          _graphName = newPath.split('/').last;
-                                          _locGraph = newPath;
-                                          final logoFile = File('$newPath/logo.png');
+                                          _graphName = selectedPath.split('/').last;
+                                          _locGraph = selectedPath;
+                                          final logoFile = File('$selectedPath/logo.png');
                                           _imgLogo = logoFile.existsSync() ? logoFile : null;
                                         });
                                       }
@@ -257,6 +271,7 @@ class _ManageGraphState extends State<ManageGraph>{
                                         context,
                                         MaterialPageRoute(builder: (c) => GraphCanvas(graphPath: _locGraph))
                                     );
+                                    FileManager.saveLastAccessedTime(_locGraph);
                                   },
                                   style: ElevatedButton.styleFrom(
                                       backgroundColor: mainPurple,
@@ -290,7 +305,21 @@ class _ManageGraphState extends State<ManageGraph>{
                               Expanded(
                                 child: ElevatedButton(
                                   onPressed: () async {
-                                    AppDialogs.showForgetGraphDialog(context, _locGraph);
+                                    AppDialogs.showForgetGraphDialog(
+                                        context,
+                                        () async {
+                                          await FileManager.purgeFromFavorites(_locGraph);
+                                          await FileManager.removeGraphs(_locGraph);
+                                          AlertHelper.showSnakbar(context, 'Se ha olvidado la carpeta "${_locGraph.split('/').last}"', 5, redAlert, Colors.white);
+                                          if(context.mounted){
+                                            Navigator.pushAndRemoveUntil(
+                                                context,
+                                                MaterialPageRoute(builder: (c) => MainMenu()),
+                                                    (route) => false
+                                            );
+                                          }
+                                        }
+                                    );
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: redAlert,
@@ -309,7 +338,23 @@ class _ManageGraphState extends State<ManageGraph>{
                               Expanded(
                                 child: ElevatedButton(
                                   onPressed: () async {
-                                    AppDialogs.showDeleteGraphDialog(context, _locGraph);
+                                    AppDialogs.showDeleteGraphDialog(
+                                        context,
+                                        _locGraph.split('/').last,
+                                        () async {
+                                          await FileManager.purgeFromFavorites(_locGraph);
+                                          await FileManager.removeGraphs(_locGraph);
+                                          await FileManager.deleteDirectory(Directory(_locGraph));
+                                          AlertHelper.showSnakbar(context, 'Se ha ELIMINADO la carpeta "${_locGraph.split('/').last}"', 5, redAlert, Colors.white);
+                                          if(context.mounted){
+                                            Navigator.pushAndRemoveUntil(
+                                                context,
+                                                MaterialPageRoute(builder: (c) => MainMenu()),
+                                                    (route) => false
+                                            );
+                                          }
+                                        }
+                                    );
                                   },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: redAlert,
