@@ -1011,7 +1011,8 @@ class AppDialogs{
     bool hasType = false;
     bool hasOrigin = false;
     bool hasDestination = false;
-    bool exist = false;
+    bool edgeError = false;
+    String edgeErrorText = "";
 
     Color hintTypeColor = Colors.black38;
     Color hintOriginColor = Colors.black38;
@@ -1114,6 +1115,7 @@ class AppDialogs{
                                       hintOriginColor = Colors.black38;
                                       existColor = Colors.black;
                                       hasOrigin = false;
+                                      edgeError = false;
                                     });
                                   },
                                 )
@@ -1185,6 +1187,7 @@ class AppDialogs{
                                       hintDestinationColor = Colors.black38;
                                       existColor = Colors.black;
                                       hasDestination = false;
+                                      edgeError = false;
                                     });
                                   },
                                 )
@@ -1254,6 +1257,7 @@ class AppDialogs{
                                               hintTypeColor = Colors.black38;
                                               existColor = Colors.black;
                                               hasType = false;
+                                              edgeError = false;
                                             });
                                           },
                                           controller: typeController,
@@ -1286,15 +1290,15 @@ class AppDialogs{
                               ),
                             ),
 
-                            if(exist)...[
+                            if(edgeError)...[
                               Padding(
                                   padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 0.h),
                                   child: SizedBox(
                                     width: double.infinity,
                                     child: Text(
-                                      "Ya existe una relación igual a esta\nEscoge otros nodos o cambia el tipo",
+                                      edgeErrorText,
                                       textAlign: TextAlign.start,
-                                      style: TextStyle(color: redAlert, fontSize: 20.sp, fontWeight: FontWeight.bold),),
+                                      style: TextStyle(color: redAlert, fontSize: 18.sp, fontWeight: FontWeight.bold),),
                                   )
                               ),
                             ],
@@ -1312,6 +1316,13 @@ class AppDialogs{
                                 width: double.infinity,
                                 child: ElevatedButton(
                                   onPressed: () async {
+                                    setState((){
+                                      hasOrigin = false;
+                                      hasDestination = false;
+                                      hasType = false;
+                                      edgeError = false;
+                                    });
+
                                     //Comprobamos nodo origen
                                     if(fixedOrigin == null){
                                       if(originNodeController.text.isEmpty){
@@ -1355,20 +1366,24 @@ class AppDialogs{
                                         type: typeController.text.trim()
                                     );
 
-                                    //Comprobamos si ya exsiste la relación
+                                    //Comprobamos errores en la nueva relación
 
                                     if(edgeList.any(
                                             (e) => e.from == newEdge.from &&
                                                 e.type == newEdge.type &&
                                                 e.to == newEdge.to)
+                                        || newEdge.to == newEdge.from
                                     ){
                                       setState(() {
-                                        exist = true;
+                                        edgeError = true;
                                         existColor = redAlert;
+                                        newEdge.to == newEdge.from ?
+                                            edgeErrorText = "Mismo origen y destino.\nEscoge nodos diferentes."
+                                            : edgeErrorText = "Ya existe una relación igual.\nEscoge otros nodos o tipo";
                                       });
                                       return;
                                     }else{
-                                      exist = false;
+                                      edgeError = false;
                                     }
 
                                     Navigator.pop(dialogContext);

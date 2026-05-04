@@ -70,7 +70,7 @@ class _NodeMenuState extends State<NodeMenu> {
         final content = await _file.readAsString();
         setState(() => _nodeContentController.text = content);
       }else{
-        setState(() => _nodeContentController.text = "Error: Error de lectura o archivo inexistente. \n ${_file.path}");
+        setState(() => _nodeContentController.text = "Error: Error de lectura o archivo inexistente.\n${_file.path}");
       }
     } catch (e) {
       debugPrint('Error cargando nodo: $e');

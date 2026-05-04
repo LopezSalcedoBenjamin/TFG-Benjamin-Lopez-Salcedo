@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class FileManager {
@@ -82,9 +83,9 @@ class FileManager {
     try {
       File file = File("$path/$name");
       await file.writeAsString(content);
-      print("Archivo creado en: $path/$name");
+      debugPrint("Archivo creado en: $path/$name");
     } catch (e) {
-      print("Error al crear archivo: $e");
+      debugPrint("Error al crear archivo: $e");
     }
   }
 
@@ -113,7 +114,7 @@ class FileManager {
       final destination = "$path/logo.png";
       await img.copy(destination);
     }catch(e){
-      print("error al copiar imagen");
+      debugPrint("Error al copiar imagen");
     }
   }
 

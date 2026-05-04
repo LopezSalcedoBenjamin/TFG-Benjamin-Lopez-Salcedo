@@ -168,6 +168,7 @@ class _ManageGraphState extends State<ManageGraph>{
                                         await FileManager.purgeFromFavorites(_locGraph);
                                         await FileManager.removeGraphs(_locGraph);
                                         await FileManager.saveGraphs(newPath);
+                                        await updateJson(newPath);
                                         setState((){
                                           _graphName = newName;
                                           _locGraph = newPath;
@@ -232,6 +233,7 @@ class _ManageGraphState extends State<ManageGraph>{
                                         await FileManager.purgeFromFavorites(_locGraph);
                                         await FileManager.removeGraphs(_locGraph);
                                         await FileManager.saveGraphs(selectedPath);
+                                        await updateJson(selectedPath);
                                         setState((){
                                           _graphName = selectedPath.split('/').last;
                                           _locGraph = selectedPath;

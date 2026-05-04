@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math';
 
+import 'package:flutter/material.dart';
+
 import '../../domain/entities/graph_entity.dart';
 import '../../domain/entities/node_entity.dart';
 import '../../domain/entities/edge_entity.dart';
@@ -11,19 +13,19 @@ import '../../features/graph/presentation/widgets/file_Manager.dart';
 //_________________________________________________ GESTION DE GRAFOS _________________________________________________
 
 Future<void> createGraph(String name, String dir, File? logo) async {
+  try{
+    FileManager.createDirectory(dir, name);
+    final String graphPath = "$dir/$name";
+    FileManager.createDirectory(graphPath, "nodes");
+    if (logo != null) {
+      FileManager.copyImage(logo, graphPath);
+    }
 
-  FileManager.createDirectory(dir, name);
-  final String graphPath = "$dir/$name";
-  FileManager.createDirectory(graphPath, "nodes");
-  if (logo != null) {
-    FileManager.copyImage(logo, graphPath);
-  }
+    NodeEntity n1 = await createNode('Bienvenido', graphPath);
+    NodeEntity n2 = await createNode('Nodo Ejemplo', graphPath);
+    EdgeEntity edge = await createEdge(n1, n2, 'relación ejemplo');
 
-  NodeEntity n1 = await createNode('Bienvenido', graphPath);
-  NodeEntity n2 = await createNode('Nodo Ejemplo', graphPath);
-  EdgeEntity edge = await createEdge(n1, n2, 'relación ejemplo');
-
-  final String wellcomeMessage = '''
+    final String wellcomeMessage = '''
   ¡¡¡Bienvenido a tu nuevo grafo!!! 
   
   Este es tu primer nodo de bienvenida, puedes escribir todo lo que quieras dentro de los nodos que crees.
@@ -32,23 +34,62 @@ Future<void> createGraph(String name, String dir, File? logo) async {
   Cuando estés listo edítame o bórrame y comienza a disfrutar tu nuevo grafo.
   ''';
 
-  FileManager.writeContent(n1.filePath, wellcomeMessage);
+    FileManager.writeContent(n1.filePath, wellcomeMessage);
 
-  GraphEntity g = GraphEntity(nodes: [], edges: []);
-  g.nodes.add(n1);
-  g.nodes.add(n2);
-  g.edges.add(edge);
-  FileManager.createFile(graphPath, jsonEncode(g.toJson()), "$name.json");
+    GraphEntity g = GraphEntity(nodes: [], edges: []);
+    g.nodes.add(n1);
+    g.nodes.add(n2);
+    g.edges.add(edge);
+    FileManager.createFile(graphPath, jsonEncode(g.toJson()), "$name.json");
+  }catch(e){
+    debugPrint("Error al crear el grafo: $e");
+    rethrow;
+  }
 }
 
 Future<void> saveGraph (GraphEntity graph, String graphPath) async{
-  final graphName = graphPath.split('/').last;
-  final file = File('$graphPath/$graphName.json');
-  await file.writeAsString(jsonEncode(graph.toJson()));
+  try{
+    final graphName = graphPath.split('/').last;
+    final file = File('$graphPath/$graphName.json');
+    await file.writeAsString(jsonEncode(graph.toJson()));
+  } catch (e) {
+    debugPrint("Error al guardar el grafo: $e");
+    rethrow;
+  }
 }
 
 void deleteGraph(Directory dir){
   FileManager.deleteDirectory(dir);
+}
+
+Future<void> updateJson(String graphPath) async{
+  try{
+    final graphName = graphPath.split('/').last;
+    final file = File('$graphPath/$graphName.json');
+    final json = jsonDecode(await file.readAsString());
+    final graph = GraphEntity.fromJson(json);
+    List<NodeEntity> updatedNodes = [];
+
+    for(NodeEntity n in graph.nodes){
+      String newPath = "$graphPath/nodes/${n.filePath.split('/').last}";
+      if(await File(newPath).exists()){
+        updatedNodes.add(NodeEntity(
+            id: n.id,
+            title: n.title,
+            x: n.x, y: n.y,
+            filePath: newPath
+        ));
+      }else{
+        updatedNodes.add(n);
+        debugPrint('Error al localizar archivo del nodo: "${n.title}"');
+      }
+    }
+    final updatedGraph = GraphEntity(nodes: updatedNodes, edges: graph.edges);
+    await saveGraph(updatedGraph, graphPath);
+
+  }catch(e){
+    debugPrint("Error al actualizar el Json del grafo");
+  }
 }
 
 //_________________________________________________ GESTION DE NODOS _________________________________________________
@@ -169,22 +210,12 @@ Future<void> deleteEdge(EdgeEntity edge, String graphPath) async {
   final json = jsonDecode(await file.readAsString());
   final graph = GraphEntity.fromJson(json);
 
-  for(EdgeEntity e in graph.edges){
-    print(e.toJson().toString());
-  }
-  print("object");
-  print(edge.toJson().toString());
-
   final updatedEdges = graph.edges.where(
-          (e) => e.from != edge.from
-              && e.type != edge.type
-              && e.to != edge.to
+          (e) => !(e.from == edge.from
+          && e.type == edge.type
+          && e.to == edge.to)
   ).toList();
   final updatedGraph = GraphEntity(nodes: graph.nodes, edges: updatedEdges);
-  print("object2");
-  for(EdgeEntity e in updatedEdges){
-    print(e.toJson().toString());
-  }
 
   await saveGraph(updatedGraph, graphPath);
 }
