@@ -219,7 +219,7 @@ class _NodeMenuState extends State<NodeMenu> {
                       ),
 
 
-                      SizedBox(height: 5.sp),
+                      SizedBox(height: 10.sp),
 
                       ElevatedButton(
                         onPressed: () async {
@@ -233,7 +233,7 @@ class _NodeMenuState extends State<NodeMenu> {
                           elevation: 0,
                           minimumSize: Size(double.infinity, 50.r),
                           padding: EdgeInsets.all(10.r),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.r)),
                         ),
                         child: _isEditingContent ?
                             Text("Guardar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold))

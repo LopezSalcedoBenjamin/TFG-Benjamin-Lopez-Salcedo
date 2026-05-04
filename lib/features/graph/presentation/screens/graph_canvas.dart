@@ -7,10 +7,11 @@ import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/consts.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/data/datasources/graph_file_datasource.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/domain/entities/edge_entity.dart';
-import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/NIA_screen.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/NIA_input_screen.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/node_list.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/dialog_popups.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/file_Manager.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/graph_View.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../domain/entities/graph_entity.dart';
@@ -34,6 +35,8 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
 
   String _jsonDEBUG = '';
 
+  GridMode _gridMode = GridMode.dotted;
+
   bool _speedDialOpen = false;
   late AnimationController _animationController;
   late Animation<double> _expandAnimation;
@@ -44,7 +47,6 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
     _jsonFile = File("${widget.graphPath}/${widget.graphPath.split('/').last}.json");
     _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200),);
     _expandAnimation = CurvedAnimation(parent: _animationController, curve: Curves.easeOut,);
-    _loadJson();
     _loadGraph();
   }
 
@@ -77,53 +79,18 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
         _edgeList = graph.edges;
       });
 
-      _loadJson();
-
     } catch (e) {
       debugPrint('Error cargando grafo: $e');
     }
   }
 
-  //DEBUG, ELIMINAR MAS TARDE
-  Future<void> _loadJson() async {
-
-    // Ver qué versión de Android tenemos
-    final android = await DeviceInfoPlugin().androidInfo;
-    final sdk = android.version.sdkInt;
-    debugPrint('SDK version: $sdk');
-
-    // Ver el estado actual de cada permiso
-    debugPrint('storage.isGranted: ${await Permission.storage.isGranted}');
-    debugPrint('storage.isDenied: ${await Permission.storage.isDenied}');
-    debugPrint('storage.isPermanentlyDenied: ${await Permission.storage.isPermanentlyDenied}');
-    debugPrint('photos.isGranted: ${await Permission.photos.isGranted}');
-
-    final tienePermiso = await PermissionService.hasStoragePermission();
-    debugPrint('hasStoragePermission: $tienePermiso');
-
-    if (!tienePermiso) {
-      final concedido = await PermissionService.requestStoragePermission();
-      debugPrint('requestStoragePermission resultado: $concedido');
-      if (!concedido) {
-        setState(() => _jsonDEBUG = 'Sin permiso de almacenamiento');
-        return;
-      }
-    }
-
-    final graphName = widget.graphPath.split('/').last;
-    final file = File('${widget.graphPath}/$graphName.json');
-
-    if (!await file.exists()) {
-      setState(() => _jsonDEBUG = 'ERROR: Archivo no encontrado en ${file.path}');
-      return;
-    }
-
-    try {
-      final content = await file.readAsString();
-      setState(() => _jsonDEBUG = content);
-    } catch (e) {
-      setState(() => _jsonDEBUG = 'ERROR: $e');
-    }
+  void _cycleGridMode() {
+    setState(() {
+      _gridMode = GridMode.values[
+        (_gridMode.index + 1) % GridMode.values.length
+      ];
+      debugPrint("GridMode = $_gridMode");
+    });
   }
 
   void _toggleSpeedDial(){
@@ -204,31 +171,18 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
 
         body: Stack(
           children: [
-            Center(
-                child: Padding(
-                    padding: EdgeInsets.all(20),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          widget.graphPath,
-                          style: TextStyle(color: Colors.white, fontSize: 16.sp),
-                          textAlign: TextAlign.center,
-                        ),
 
-                        SizedBox(height: 10.h,),
-
-                        Text(
-                          //_jsonDEBUG,
-                          "hola",
-                          style: TextStyle(color: Colors.white, fontSize: 16.sp),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
-                    )
+            // ___________________________________________________GRAPH CANVAS___________________________________________________
+            _graph.nodes.isEmpty?
+                Center(
+                  child: Text(
+                    'Todavía no hay nodos en este grafo',
+                    style: TextStyle(color: Colors.white38, fontSize: 16.sp),
+                  ),
                 )
-            ),
+            : GraphView(gridMode: _gridMode),
 
+            // ___________________________________________________SPEED DIAL___________________________________________________
             Positioned(
               bottom: 35.h,
               left: 0,
@@ -273,7 +227,6 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
                               FileManager.writeContent(n.filePath, nodeContent);
                             }
                             _loadGraph();
-                            _loadJson();
                           },
                         );
                       },
@@ -282,6 +235,21 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
                   ],
                 ),
               ),
+            ),
+
+            // ___________________________________________________GRID VIEW BUTTON___________________________________________________
+            Positioned(
+                top: 12.h,
+                right: 12.h,
+                child: FloatingActionButton.small(
+                  heroTag: 'gridMode',
+                  backgroundColor: bottomBar,
+                  shape: CircleBorder(),
+                  onPressed: (){
+                    _cycleGridMode();
+                  },
+                  child: Icon(Icons.remove_red_eye_outlined, color: Colors.white,),
+                )
             ),
           ],
         ),
