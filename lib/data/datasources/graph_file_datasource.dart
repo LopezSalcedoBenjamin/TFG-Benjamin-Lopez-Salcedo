@@ -1,7 +1,6 @@
 
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
 
 import 'package:flutter/material.dart';
 
@@ -92,6 +91,52 @@ Future<void> updateJson(String graphPath) async{
   }
 }
 
+Future<void> fuseGraphNIA(String graphPath, List<Map<String, dynamic>> newNodesNIA, List<Map<String, dynamic>> newEdgesNIA) async{
+  try{
+    final graphName = graphPath.split('/').last;
+    final file = File('$graphPath/$graphName.json');
+    final json = jsonDecode(await file.readAsString());
+    final graph = GraphEntity.fromJson(json);
+
+    List<NodeEntity> newNodes = [];
+    List<EdgeEntity> newEdges = [];
+
+    for(Map<String, dynamic> m in newNodesNIA){
+      if(!graph.nodes.map((n) => n.title).contains(m['title'].toString())){
+        final node = await createNode(
+            m['title'].toString().length > 25 ? m['title'].toString().substring(0,25) : m['title'].toString(),
+            graphPath);
+        newNodes.add(node);
+      }
+    }
+    List<NodeEntity> updatedNodes = [...graph.nodes, ...newNodes];
+
+    for(Map<String, dynamic> r in newEdgesNIA){
+      if(updatedNodes.map((n) => n.title).contains(r['node1'].toString()) &&
+          updatedNodes.map((n) => n.title).contains(r['node2'].toString())
+      ){
+        if( (r['node1'] != r['node2']) && !graph.edges.any(
+                (e) => e.to == r['node2'] &&
+                e.from == r['node1'] &&
+                e.type == r['type'])){
+          final edge = await createEdge(
+              updatedNodes.firstWhere((n) => n.title == r['node1']),
+              updatedNodes.firstWhere((n) => n.title == r['node2']),
+              r['type'].toString().length > 25? r['type'].toString().substring(0,25) : r['type'].toString()
+          );
+          newEdges.add(edge);
+        }
+      }
+    }
+    List<EdgeEntity> updatedEdges = [...graph.edges, ...newEdges];
+
+    final updatedGraph = GraphEntity(nodes: updatedNodes, edges: updatedEdges);
+    await saveGraph(updatedGraph, graphPath);
+  }catch(e){
+    debugPrint("Error al fusionar resultados NIA: $e");
+  }
+}
+
 //_________________________________________________ GESTION DE NODOS _________________________________________________
 
 Future<NodeEntity> createNode(String name, String dir) async {
@@ -103,7 +148,7 @@ Future<NodeEntity> createNode(String name, String dir) async {
   return NodeEntity(
       id: id,
       title: name,
-      x: 1, y: 1,           //Cambiar la generación de la posición en grafo___________________________________________________________________
+      x: 1, y: 1,
       filePath: filePath
   );
 }

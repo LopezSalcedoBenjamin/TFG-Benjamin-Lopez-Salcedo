@@ -1,6 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:math';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/data/datasources/graph_file_datasource.dart';
@@ -14,7 +14,6 @@ import '../../../../consts.dart';
 import '../../../../domain/entities/edge_entity.dart';
 
 List<String> titles = <String>['Contenido', 'Relaciones'];
-enum NodeOptions {rename, delete}
 
 class NodeMenu extends StatefulWidget {
   final NodeEntity node;
@@ -77,6 +76,50 @@ class _NodeMenuState extends State<NodeMenu> {
     }
   }
 
+  Future<void> _nodeOptions(context, option) async{
+    switch(option){
+      case NodeOptions.rename:
+        AppDialogs.showRenameNodeDialog(
+            context,
+            _graph.nodes.map((n) => n.title).toList(),
+            widget.node.title,
+                (newName) async{
+              final fileExtension = _file.path.split('.').last;
+              await FileManager.renameFile(_file.path, "$newName.$fileExtension");
+              final renamedNode = NodeEntity(
+                  id: widget.node.id,
+                  title: newName,
+                  x: widget.node.x, y: widget.node.y,
+                  filePath: "${_file.path.substring(0,_file.path.lastIndexOf('/'))}/$newName.$fileExtension"
+              );
+              await updateEdges(widget.node, renamedNode, widget.graphPath);
+              await saveNode(renamedNode, widget.graphPath);
+
+              if (context.mounted) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (c) => NodeMenu(
+                    node: renamedNode,
+                    graphPath: widget.graphPath,
+                  )),
+                );
+              }
+            }
+        );
+      case NodeOptions.delete:
+        AppDialogs.showDeleteNodeDialog(
+            context,
+            widget.node.title,
+                () async {
+
+              await deleteNode(widget.node, widget.graphPath);
+              if(context.mounted) Navigator.pop(context);
+
+            }
+        );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
 
@@ -110,47 +153,7 @@ class _NodeMenuState extends State<NodeMenu> {
                   color: mainPurple,
                   icon: Icon(Icons.settings, size: 30.r,),
                   onSelected: (option) async{
-                    switch(option){
-                      case NodeOptions.rename:
-                        AppDialogs.showRenameNodeDialog(
-                            context,
-                            _graph.nodes.toList(),
-                            widget.node,
-                            (newName) async{
-                              final fileExtension = _file.path.split('.').last;
-                              await FileManager.renameFile(_file.path, "$newName.$fileExtension");
-                              final renamedNode = NodeEntity(
-                                  id: widget.node.id,
-                                  title: newName,
-                                  x: widget.node.x, y: widget.node.y,
-                                  filePath: "${_file.path.substring(0,_file.path.lastIndexOf('/'))}/$newName.$fileExtension"
-                              );
-                              await updateEdges(widget.node, renamedNode, widget.graphPath);
-                              await saveNode(renamedNode, widget.graphPath);
-
-                              if (context.mounted) {
-                                Navigator.pushReplacement(
-                                  context,
-                                  MaterialPageRoute(builder: (c) => NodeMenu(
-                                    node: renamedNode,
-                                    graphPath: widget.graphPath,
-                                  )),
-                                );
-                              }
-                            }
-                            );
-                      case NodeOptions.delete:
-                        AppDialogs.showDeleteNodeDialog(
-                            context,
-                            widget.node,
-                            () async {
-
-                              await deleteNode(widget.node, widget.graphPath);
-                              if(context.mounted) Navigator.pop(context);
-
-                            }
-                        );
-                    }
+                    _nodeOptions(context, option);
                   },
                   itemBuilder: (context) => [
                     PopupMenuItem<NodeOptions>(

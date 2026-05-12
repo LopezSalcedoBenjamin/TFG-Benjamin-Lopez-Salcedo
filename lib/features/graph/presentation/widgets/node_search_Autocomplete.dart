@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 
@@ -28,6 +27,7 @@ class NodeSearchAutocomplete extends StatelessWidget {
   final String hintText;
   final NodeSearchStyle style;
   final VoidCallback? onTap;
+  final Function(NodeEntity)? onNodeSelected;
 
 
   const NodeSearchAutocomplete({
@@ -37,6 +37,7 @@ class NodeSearchAutocomplete extends StatelessWidget {
     this.hintText = "Buscar nodo...",
     this.style = const NodeSearchStyle(),
     this.onTap,
+    this.onNodeSelected,
   });
 
   @override
@@ -51,6 +52,7 @@ class NodeSearchAutocomplete extends StatelessWidget {
       displayStringForOption: (node) => node.title,
       onSelected: (node){
         nodeController.text = node.title;
+        onNodeSelected?.call(node);
       },
       fieldViewBuilder: (context, controller, focusNode, onSubmited){
         return Container(

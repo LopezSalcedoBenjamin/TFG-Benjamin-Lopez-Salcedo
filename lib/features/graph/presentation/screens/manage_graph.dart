@@ -156,7 +156,7 @@ class _ManageGraphState extends State<ManageGraph>{
 
                             ElevatedButton(
                                 onPressed: (){
-                                  AppDialogs.showRenameDialog(
+                                  AppDialogs.showRenameGraphDialog(
                                       context,
                                       _locGraph,
                                       _graphName,
@@ -346,6 +346,8 @@ class _ManageGraphState extends State<ManageGraph>{
                                         () async {
                                           await FileManager.purgeFromFavorites(_locGraph);
                                           await FileManager.removeGraphs(_locGraph);
+                                          await FileManager.deleteLastAccessedTime(_locGraph);
+                                          await FileManager.deleteGridMode(_locGraph);
                                           await FileManager.deleteDirectory(Directory(_locGraph));
                                           AlertHelper.showSnakbar(context, 'Se ha ELIMINADO la carpeta "${_locGraph.split('/').last}"', 5, redAlert, Colors.white);
                                           if(context.mounted){

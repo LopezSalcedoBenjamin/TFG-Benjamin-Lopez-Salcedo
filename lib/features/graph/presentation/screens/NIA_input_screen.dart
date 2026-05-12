@@ -1,16 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/NIA_output_screen.dart';
 
 import '../../../../consts.dart';
 
-class NiaScreen extends StatefulWidget {
-  const NiaScreen({super.key});
+class NiaInputScreen extends StatefulWidget {
+  final List<String> existingNodes;
+  const NiaInputScreen({super.key, required this.existingNodes});
 
   @override
-  State<NiaScreen> createState() => _NiaScreenState();
+  State<NiaInputScreen> createState() => _NiaInputScreenState();
 }
 
-class _NiaScreenState extends State<NiaScreen> {
+class _NiaInputScreenState extends State<NiaInputScreen> {
 
   bool _hasText = true;
 
@@ -86,10 +88,23 @@ class _NiaScreenState extends State<NiaScreen> {
                   child: ElevatedButton(
                     onPressed: () {
                       if(_textInputController.text.isEmpty){
-                        setState(() {
-                          _hasText = false;
-                        });
+                        setState(() { _hasText = false; });
+                        return;
                       }
+                      Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (c) => NiaOutputScreen(
+                                inputText: _textInputController.text,
+                                existingNodes: widget.existingNodes,
+                              ),
+                          ),
+                      ).then((result){
+                        if(result != null){
+                          if (!mounted) return;
+                          Navigator.pop(context, result);
+                        }
+                      });
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: mainPurple,

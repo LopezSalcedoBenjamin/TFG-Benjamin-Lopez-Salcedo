@@ -182,6 +182,31 @@ class FileManager {
     return date != null ? DateTime.parse(date) : DateTime.fromMicrosecondsSinceEpoch(0);
   }
 
+  //Elimina la ultima fecha de acceso del archivo
+  static Future<void> deleteLastAccessedTime(String path) async{
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove("accessed_${path.split(" / ").last}");
+  }
+
+  //Guarda el modo de grid de un grafo
+  static Future<void> saveGridMode(String path, String modeName) async{
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString("gridMode_${path.split(" / ").last}", modeName);
+  }
+
+  //Devuelve el modo de grid de un grafo
+  static Future<String> getGridMode(String path) async{
+    final prefs = await SharedPreferences.getInstance();
+    final modeName = prefs.getString("gridMode_${path.split(" / ").last}");
+    return modeName ?? "dotted";
+  }
+
+  //Elimina el modo de grid de un grafo
+  static Future<void> deleteGridMode(String path) async{
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove("gridMode_${path.split(" / ").last}");
+  }
+
 //IMPORTANTE __________________
 //Metodo de llamada y recepción de texto con Google colab
 //NOTA: la conexión con la IA será local descargando el modelo de huggingface y el código diseñado

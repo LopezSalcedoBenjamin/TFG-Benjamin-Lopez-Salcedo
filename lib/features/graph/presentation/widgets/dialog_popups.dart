@@ -301,7 +301,7 @@ class AppDialogs{
     );
   }
 
-  static void showRenameDialog(BuildContext context, String path, String oldName, Function(String) onConfirm){
+  static void showRenameGraphDialog(BuildContext context, String path, String oldName, Function(String) onConfirm){
 
     Color hintNameColor = Colors.black26;
     Color nameColor = mainBlue;
@@ -418,7 +418,7 @@ class AppDialogs{
                                 padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
                                 child: ElevatedButton(
                                   onPressed: () async {
-                                    if(nameGraphController.text.isEmpty){
+                                    if(nameGraphController.text.trim().isEmpty){
                                       Navigator.pop(dialogContext);
                                       if(!context.mounted) return;
                                       AlertHelper.showSnakbar(context, 'No se ha cambiado el nombre', 3, backgroundWhite, Colors.black);
@@ -766,7 +766,7 @@ class AppDialogs{
     );
   }
 
-  static void showCreateNodeDialog(BuildContext context, List<NodeEntity> nodeList, Function(String nodeName, String nodeContent) onConfirm){
+  static void showCreateNodeDialog(BuildContext context, List<String> nodeList, Function(String nodeName, String nodeContent) onConfirm){
 
     final TextEditingController nodeNameController = TextEditingController();
     final TextEditingController nodeContentController = TextEditingController();
@@ -941,7 +941,7 @@ class AppDialogs{
                                 child: ElevatedButton(
                                   onPressed: () async {
                                     //Comprobamos si se escogió un nombre
-                                    if(nodeNameController.text.isEmpty){
+                                    if(nodeNameController.text.trim().isEmpty){
                                       setState(() {
                                         hintNameColor = redAlert;
                                         empty = true;
@@ -951,7 +951,7 @@ class AppDialogs{
                                       empty = false;
                                     }
 
-                                    if(nodeList.any((n) => n.title == nodeNameController.text.trim())){
+                                    if(nodeList.any((n) => n == nodeNameController.text.trim())){
                                       setState(() {
                                         nameColor = redAlert;
                                         exist = true;
@@ -1325,7 +1325,7 @@ class AppDialogs{
 
                                     //Comprobamos nodo origen
                                     if(fixedOrigin == null){
-                                      if(originNodeController.text.isEmpty){
+                                      if(originNodeController.text.trim().isEmpty){
                                         setState(() {
                                           hasOrigin = true;
                                           hintOriginColor = redAlert;
@@ -1338,7 +1338,7 @@ class AppDialogs{
 
                                     //Comprobamos nodo destino
                                     if(fixedDestination == null){
-                                      if(destinationNodeController.text.isEmpty){
+                                      if(destinationNodeController.text.trim().isEmpty){
                                         setState(() {
                                           hasDestination = true;
                                           hintDestinationColor = redAlert;
@@ -1350,7 +1350,7 @@ class AppDialogs{
                                     }
 
                                     //Comprobamos tipo de relación
-                                    if(typeController.text.isEmpty){
+                                    if(typeController.text.trim().isEmpty){
                                       setState(() {
                                         hasType = true;
                                         hintTypeColor = redAlert;
@@ -1371,8 +1371,8 @@ class AppDialogs{
                                     if(edgeList.any(
                                             (e) => e.from == newEdge.from &&
                                                 e.type == newEdge.type &&
-                                                e.to == newEdge.to)
-                                        || newEdge.to == newEdge.from
+                                                e.to == newEdge.to) ||
+                                        newEdge.to == newEdge.from
                                     ){
                                       setState(() {
                                         edgeError = true;
@@ -1392,7 +1392,8 @@ class AppDialogs{
                                     AlertHelper.showSnakbar(
                                         context,
                                         'Se ha creado la relación:\n"${newEdge.from} -> [${newEdge.type}] -> ${newEdge.to}"',
-                                        3, backgroundWhite, Colors.black);
+                                        3, backgroundWhite, Colors.black
+                                    );
 
                                     onConfirm(newEdge);
                                   },
@@ -1421,7 +1422,7 @@ class AppDialogs{
     );
   }
 
-  static void showDeleteNodeDialog(BuildContext context, NodeEntity node, Function() onConfirm ){
+  static void showDeleteNodeDialog(BuildContext context, String node, Function() onConfirm ){
     showDialog(
         context: context,
         builder: (dialogContext) => Dialog(
@@ -1515,7 +1516,7 @@ class AppDialogs{
                                   onPressed: () async {
                                     Navigator.pop(dialogContext);
                                     if(!context.mounted) return;
-                                    AlertHelper.showSnakbar(context, 'Se ha ELIMINADO el nodo "${node.title}"', 5, redAlert, Colors.white);
+                                    AlertHelper.showSnakbar(context, 'Nodo eliminado: "${node}"', 5, redAlert, Colors.white);
                                     onConfirm();
                                   },
                                   style: ElevatedButton.styleFrom(
@@ -1640,8 +1641,9 @@ class AppDialogs{
                                         if(!context.mounted) return;
                                         AlertHelper.showSnakbar(
                                             context,
-                                            'Se ha ELIMINADO la relación\n"${edge.from} -> [${edge.type}] -> ${edge.to}"'
-                                            , 5, redAlert, Colors.white);
+                                            'Relación eliminada:\n"${edge.from} › ${edge.type} › ${edge.to}"'
+                                            , 5, redAlert, Colors.white
+                                        );
                                         onConfirm();
                                       },
                                       style: ElevatedButton.styleFrom(
@@ -1669,7 +1671,7 @@ class AppDialogs{
     );
   }
 
-  static void showRenameNodeDialog(BuildContext context, List<NodeEntity> nodeList, NodeEntity node, Function(String nodeName) onConfirm){
+  static void showRenameNodeDialog(BuildContext context, List<String> nodeList, String nodeName, Function(String nodeName) onConfirm){
 
     final TextEditingController nodeNameController = TextEditingController();
 
@@ -1724,7 +1726,7 @@ class AppDialogs{
                                           textAlign: TextAlign.left,
                                           style: TextStyle(color: Colors.black, fontSize: 20.sp, fontWeight: FontWeight.bold),),
                                         Text(
-                                          '"${node.title}"',
+                                          '"$nodeName"',
                                           textAlign: TextAlign.left,
                                           style: TextStyle(color: mainPurple, fontSize: 20.sp, fontWeight: FontWeight.bold),),
                                       ]
@@ -1804,7 +1806,7 @@ class AppDialogs{
                                 child: ElevatedButton(
                                   onPressed: () async {
                                     //Comprobamos si se escogió un nombre
-                                    if(nodeNameController.text.isEmpty){
+                                    if(nodeNameController.text.trim().isEmpty){
                                       setState(() {
                                         nameColor = redAlert;
                                         empty = true;
@@ -1812,7 +1814,7 @@ class AppDialogs{
                                       return;
                                     }
 
-                                    if(nodeList.any((n) => n.title == nodeNameController.text.trim())){
+                                    if(nodeList.any((n) => n == nodeNameController.text.trim())){
                                       setState(() {
                                         nameColor = redAlert;
                                         exist = true;
@@ -1849,12 +1851,491 @@ class AppDialogs{
     );
   }
 
-  static void showModifyEdgeDialog(){
+  static void showSearchInGraph(BuildContext context, List<NodeEntity> nodeList, Function(String nodeId) onConfirm){
 
+    final TextEditingController searchNodeController = TextEditingController();
+    NodeEntity? selectedNode;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+          builder: (builderContext, setState) => Dialog(
+              insetPadding: EdgeInsets.symmetric(horizontal: 15.w),
+              backgroundColor: backgroundWhite,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.r),
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: GestureDetector(
+                onTap: ()=> FocusManager.instance.primaryFocus?.unfocus(),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // _____________________________________________________HEADER_____________________________________________________
+                      AppBar(
+                        iconTheme: IconThemeData(
+                            color: Colors.white
+                        ),
+                        backgroundColor: mainPurple,
+                        elevation: 0,
+                        toolbarHeight: 70.h,
+                        centerTitle: true,
+                        title: Column(
+                          children: [
+                            Text("Buscar nodo", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
+                            Text("Busca el nodo en el grafo", style: TextStyle(color: Colors.white24, fontSize: 14.sp, fontWeight: FontWeight.bold))
+                          ],
+                        )
+                      ),
+
+                      // _____________________________________________________BODY_____________________________________________________
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+
+                            Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 30.w, vertical: 0.h),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child: Text(
+                                    "Nombre",
+                                    textAlign: TextAlign.start,
+                                    style: TextStyle(color: mainGreen, fontSize: 20.sp, fontWeight: FontWeight.bold),),
+                                )
+                            ),
+
+                            SizedBox(height: 5.h,),
+
+                            Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                                child:NodeSearchAutocomplete(
+                                  nodeList: nodeList,
+                                  nodeController: searchNodeController,
+                                  hintText: "Busca y pulsa el nombre nodo...",
+                                  style: NodeSearchStyle(
+                                    borderColor: mainGreen,
+                                    fillColor: mainGreen.withAlpha(30),
+                                  ),
+                                  onNodeSelected: (node) => setState(() => selectedNode = node),
+                                )
+                            ),
+
+                            SizedBox(height: 10.h,),
+
+                            Divider(
+                              color: Colors.grey,
+                              thickness: 3.r,
+                              indent: 20.w,
+                              endIndent: 20.w,
+                            ),
+
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: () async {
+
+                                    Navigator.pop(dialogContext);
+                                    if(!context.mounted) return;
+
+                                    if(selectedNode != null){
+                                      AlertHelper.showSnakbar(
+                                          context,
+                                          '"${selectedNode!.title}" encontrado',
+                                          3, backgroundWhite, Colors.black
+                                      );
+                                      onConfirm(selectedNode!.id);
+                                    }else{
+                                      AlertHelper.showSnakbar(
+                                          context,
+                                          'No se ha seleccionado nodo',
+                                          3, backgroundWhite, Colors.black
+                                      );
+                                    }
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: mainBlue,
+                                    elevation: 0,
+                                    minimumSize: Size(double.infinity, 50.r),
+                                    padding: EdgeInsets.all(10.r),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                  ),
+                                  child: Text("Buscar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            )
+
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              )
+          )
+      ),
+    );
   }
 
-  static void showUnattachedNodesDialog(){
+  static void showModifyEdgeDialog(BuildContext context, List<EdgeEntity> edgeList, EdgeEntity edge, Function(String edgeType) onConfirm){
+    final TextEditingController edgeTypeController = TextEditingController();
 
+    Color hintTypeColor = Colors.black26;
+    Color typeColor = mainBlue;
+    bool empty = false;
+    bool exist = false;
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+          builder: (builderContext, setState) => Dialog(
+              insetPadding: EdgeInsets.symmetric(horizontal: 15.w),
+              backgroundColor: backgroundWhite,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(15.r),
+              ),
+              clipBehavior: Clip.hardEdge,
+              child: GestureDetector(
+                onTap: ()=> FocusManager.instance.primaryFocus?.unfocus(),
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      // _____________________________________________________HEADER_____________________________________________________
+                      AppBar(
+                        iconTheme: IconThemeData(
+                            color: Colors.white
+                        ),
+                        backgroundColor: mainPurple,
+                        elevation: 0,
+                        toolbarHeight: 70.h,
+                        centerTitle: true,
+                        title: Column(children: [
+                          Text("Modificar relación", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
+                          Text('Cambia el tipo de relación', style: TextStyle(color: Colors.white38, fontSize: 14.sp)),
+                        ]),
+                      ),
+
+                      // _____________________________________________________BODY_____________________________________________________
+                      Padding(
+                        padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+
+                            Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 35.w, vertical: 0.h),
+                                child: SizedBox(
+                                  width: double.infinity,
+                                  child:Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      children: [
+                                        Text(
+                                          "Tipo actual:",
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(color: Colors.black, fontSize: 20.sp, fontWeight: FontWeight.bold),),
+                                        Text(
+                                          '"${edge.type}"',
+                                          textAlign: TextAlign.left,
+                                          style: TextStyle(color: mainPurple, fontSize: 20.sp, fontWeight: FontWeight.bold),),
+                                      ]
+                                  ),
+                                )
+                            ),
+
+                            SizedBox(height: 10.h,),
+
+                            if(empty) ...[
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h)
+                                ,child:Text(
+                                'Por favor, selecciona un tipo de relación.',
+                                style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
+                                textAlign: TextAlign.center,
+                              ),
+                              ),
+                            ],
+                            if(exist) ...[
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h)
+                                ,child:Text(
+                                'Ya existe esta relación.\nEscriba tipo diferente.',
+                                style: TextStyle(color: redAlert, fontWeight: FontWeight.bold, fontSize: 15.sp),
+                                textAlign: TextAlign.center,
+                              ),
+                              ),
+                            ],
+
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                              child: TextField(
+                                onTap: () {
+                                  setState(() {
+                                    hintTypeColor = Colors.black26;
+                                    typeColor = mainBlue;
+                                  });
+                                },
+                                controller: edgeTypeController,
+                                style: TextStyle(color: typeColor),
+                                maxLength: 25,
+                                maxLengthEnforcement: MaxLengthEnforcement.enforced,
+                                decoration: InputDecoration(
+                                  counterStyle: TextStyle(
+                                    color: edgeTypeController.text.length >= 25 ? redAlert : Colors.black26,
+                                    fontSize: 12.sp,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  hintText: "Escriba el tipo de relación...",
+                                  hintStyle: TextStyle(color: hintTypeColor, fontSize: 15.sp),
+                                  filled: true,
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(6.r),
+                                    borderSide: BorderSide.none,
+                                  ),
+
+                                  contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+
+                                ),
+
+                                cursorColor: edgeTypeController.text.length >= 25 ? redAlert : cursorColor,
+                              ),
+                            ),
+
+                            Divider(
+                              color: Colors.grey,
+                              thickness: 3.r,
+                              indent: 20.w,
+                              endIndent: 20.w,
+                            ),
+
+                            Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 0.h),
+                              child: SizedBox(
+                                width: double.infinity,
+                                child: ElevatedButton(
+                                  onPressed: () async {
+                                    //Comprobamos si se escogió un nombre
+                                    if(edgeTypeController.text.trim().isEmpty){
+                                      setState(() {
+                                        typeColor = redAlert;
+                                        empty = true;
+                                      });
+                                      return;
+                                    }
+
+                                    if(edgeList.any((e) =>
+                                      e.from == edge.from && e.to == edge.to &&
+                                      e.type == edgeTypeController.text.trim())
+                                    ){
+                                      setState(() {
+                                        typeColor = redAlert;
+                                        exist = true;
+                                      });
+                                      return;
+                                    }
+
+                                    Navigator.pop(dialogContext);
+                                    if(!context.mounted) return;
+
+                                    onConfirm(edgeTypeController.text.trim());
+                                  },
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: mainBlue,
+                                    elevation: 0,
+                                    minimumSize: Size(double.infinity, 50.r),
+                                    padding: EdgeInsets.all(10.r),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                  ),
+                                  child: Text("Confirmar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                ),
+                              ),
+                            )
+
+                          ],
+                        ),
+                      )
+                    ],
+                  ),
+                ),
+              )
+          )
+      ),
+    );
+  }
+
+  static void showFuseNodeDialog(BuildContext context, String currentNodeName, List<String> allNodeNames, List<String> existingNodes, Function(String targetName) onConfirm,){
+
+    final allNodes = allNodeNames.where((n) => n != currentNodeName).toList()
+      ..sort();
+
+    String? selectedNode;
+    List<String> filtered = List.from(allNodes);
+
+    showDialog(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+          builder: (builderContext, setState) => Dialog(
+              insetPadding: EdgeInsets.symmetric(horizontal: 15.w),
+              backgroundColor: backgroundWhite,
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(15.r)
+              ),
+              clipBehavior: Clip.hardEdge,
+              child:GestureDetector(
+                onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
+                child: SingleChildScrollView(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // _____________________________________________________HEADER_____________________________________________________
+                      AppBar(
+                        iconTheme: IconThemeData(
+                            color: Colors.white
+                        ),
+                        backgroundColor: mainPurple,
+                        elevation: 0,
+                        toolbarHeight: 70.h,
+                        centerTitle: true,
+                        title: Column(children: [
+                          Text("Fusionar nodo", style: TextStyle(color: Colors.white, fontSize: 28.sp, fontWeight: FontWeight.bold)),
+                          Text('Fusiona "$currentNodeName" con otro nodo', style: TextStyle(color: Colors.white38, fontSize: 14.sp)),
+                        ]),
+                      ),
+
+                      // _____________________________________________________BODY_____________________________________________________
+                      Padding(
+                          padding: EdgeInsets.symmetric(horizontal: 10.w, vertical: 20.h),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20.w),
+                                child: TextField(
+                                  onChanged: (value) {
+                                    setState(() {
+                                      filtered = allNodes
+                                          .where((n) => n.toLowerCase().contains(value.toLowerCase()))
+                                          .toList();
+                                      selectedNode = null;
+                                    });
+                                  },
+                                  decoration: InputDecoration(
+                                    hintText: "Buscar personaje...",
+                                    prefixIcon: Icon(Icons.search, color: mainPurple),
+                                    filled: true,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8.r),
+                                      borderSide: BorderSide.none,
+                                    ),
+                                    contentPadding: EdgeInsets.symmetric(horizontal: 12.w, vertical: 10.h),
+                                  ),
+                                ),
+                              ),
+
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                                child: SizedBox(
+                                  height: 210.h,
+                                  child: filtered.isEmpty
+                                      ? Center(child: Text("Sin resultados", style: TextStyle(color: Colors.black38)))
+                                      : ClipRRect(
+                                    borderRadius: BorderRadius.circular(15.r),
+                                    child: ListView.builder(
+                                      itemCount: filtered.length,
+                                      itemBuilder: (context, index) {
+                                        final name = filtered[index];
+                                        final isFromGraph = existingNodes.contains(name);
+                                        final isSelected = selectedNode == name;
+                                        return Padding(
+                                          padding: EdgeInsets.only(bottom: 5.h),
+                                          child: GestureDetector(
+                                            onTap: () => setState(() => selectedNode = name),
+                                            child: AnimatedContainer(
+                                              height: 60.h,
+                                              duration: Duration(milliseconds: 150),
+                                              decoration: BoxDecoration(
+                                                color: isSelected ? mainPurple.withAlpha(30) : blackGraph3.withAlpha(30),
+                                                borderRadius: BorderRadius.circular(15.r),
+                                                border: Border.all(
+                                                  color: isSelected ? mainPurple : Colors.transparent,
+                                                  width: 1.5.w,
+                                                ),
+                                              ),
+                                              child: ListTile(
+                                                title: Text(
+                                                  name,
+                                                  style: TextStyle(fontWeight: FontWeight.bold),
+                                                  overflow: TextOverflow.ellipsis,
+                                                ),
+                                                trailing: isFromGraph ? Container(
+                                                  padding: EdgeInsets.symmetric(horizontal: 8.w, vertical: 3.h),
+                                                  decoration: BoxDecoration(
+                                                    color: mainGreen.withAlpha(200),
+                                                    borderRadius: BorderRadius.circular(20.r),
+                                                  ),
+                                                  child: Row(
+                                                    mainAxisSize: MainAxisSize.min,
+                                                    children: [
+                                                      Icon(Icons.account_tree, color: Colors.white, size: 11.r),
+                                                      SizedBox(width: 3.w),
+                                                      Text("En grafo", style: TextStyle(color: Colors.white, fontSize: 11.sp, fontWeight: FontWeight.bold)),
+                                                    ],
+                                                  ),
+                                                ) : null,
+                                              ),
+                                            ),
+                                          ),
+                                        );
+                                      },
+                                    ),
+                                  )
+                                ),
+                              ),
+
+                              Divider(
+                                color: Colors.grey,
+                                thickness: 3.r,
+                                indent: 20.w,
+                                endIndent: 20.w,
+                              ),
+
+                              Padding(
+                                  padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                                  child: SizedBox(
+                                    width: double.infinity,
+                                    child: ElevatedButton(
+                                      onPressed: () {
+                                        if(selectedNode == null) return;
+
+                                        Navigator.pop(dialogContext);
+                                        if (!context.mounted) return;
+                                        onConfirm(selectedNode!);
+                                      },
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor: mainPurple,
+                                        elevation: 0,
+                                        minimumSize: Size(double.infinity, 50.r),
+                                        padding: EdgeInsets.all(10.r),
+                                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5.r)),
+                                      ),
+                                      child: Text("Confirmar", style: TextStyle(color: Colors.white, fontSize: 22.sp, fontWeight: FontWeight.bold)),
+                                    ),
+                                  )
+                              ),
+                            ],
+                          )
+                      ),
+
+                    ],
+                  ),
+                )
+              ),
+        ),
+      ),
+    );
   }
 
   static void loginPopUp(BuildContext context){

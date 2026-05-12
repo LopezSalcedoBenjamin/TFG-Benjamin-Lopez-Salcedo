@@ -197,13 +197,13 @@ class _CreateGraphState extends State<CreateGraph>{
                       child:
                       ElevatedButton(
                           onPressed: () async {
-                            if(_nameGraphController.text.isEmpty && _locGraph == null){
+                            if(_nameGraphController.text.trim().isEmpty && _locGraph == null){
                               setState(() => _hintNameColor = redAlert );
                               setState(() => _locButtonColor = redAlert );
                               AlertHelper.showSnakbar(context, "Por favor seleccione NOMBRE y una LOCALIZACIÓN", 3, redAlert, Colors.white);
                               return;
                             }
-                            if(_nameGraphController.text.isEmpty){
+                            if(_nameGraphController.text.trim().isEmpty){
                               setState(() => _hintNameColor = redAlert );
                               AlertHelper.showSnakbar(context, "Por favor seleccione un NOMBRE para el grafo", 3, redAlert, Colors.white);
                               return;

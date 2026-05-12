@@ -29,4 +29,12 @@ const Color blackGraph3 = Color (0xFF363636);
 const Color colorAppBar = Color (0xFF141035);
 const Color bottomBar = Color(0xFF251B41);
 
-// Images.
+// Canvas.
+
+const double canvasWidth = 3000;
+const double canvasHeight = 5000;
+const double nodeSize = 80;
+
+// Enums
+
+enum NodeOptions {rename, delete}

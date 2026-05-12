@@ -1,22 +1,21 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/consts.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/data/datasources/graph_file_datasource.dart';
+import 'package:nodos_inteligencia_artificial_tfg_benjamin/data/datasources/graph_layout.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/domain/entities/edge_entity.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/NIA_input_screen.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/screens/node_list.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/dialog_popups.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/file_Manager.dart';
 import 'package:nodos_inteligencia_artificial_tfg_benjamin/features/graph/presentation/widgets/graph_View.dart';
-import 'package:permission_handler/permission_handler.dart';
 
 import '../../../../domain/entities/graph_entity.dart';
 import '../../../../domain/entities/node_entity.dart';
-import '../../../../permission_service.dart';
+import 'node_menu.dart';
 
 class GraphCanvas extends StatefulWidget {
   final String graphPath;
@@ -33,9 +32,10 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
   List<NodeEntity> _nodeList = [];
   List<EdgeEntity> _edgeList = [];
 
-  String _jsonDEBUG = '';
-
+  final TransformationController _transformController = TransformationController();
   GridMode _gridMode = GridMode.dotted;
+  Map<String, Offset> _positions = {};
+  bool _isReloading = false;
 
   bool _speedDialOpen = false;
   late AnimationController _animationController;
@@ -47,12 +47,23 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
     _jsonFile = File("${widget.graphPath}/${widget.graphPath.split('/').last}.json");
     _animationController = AnimationController(vsync: this, duration: const Duration(milliseconds: 200),);
     _expandAnimation = CurvedAnimation(parent: _animationController, curve: Curves.easeOut,);
+
+    WidgetsBinding.instance.addPostFrameCallback((_){
+      final screenSize = MediaQuery.of(context).size;
+      final double dx = -(canvasWidth/2 - screenSize.width/2);
+      final double dy = -(canvasHeight/2 - screenSize.height/2);
+
+      _transformController.value = Matrix4.translationValues(dx,dy,0);
+    });
+
+    _loadGridMode();
     _loadGraph();
   }
 
   @override
   void dispose() {
     _animationController.dispose();
+    _transformController.dispose();
     super.dispose();
   }
 
@@ -67,20 +78,72 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
 
   Future<void> _loadGraph() async{
     try {
-      final String jsonContent;
       final file = _jsonFile;
-      jsonContent = await file.readAsString();
-
+      final jsonContent = await file.readAsString();
       final graph = GraphEntity.fromJson(jsonDecode(jsonContent));
 
+      final positions = calcularLayout(graph.nodes, graph.edges);
+
+      for(final node in graph.nodes){
+        if(node.x == 1.0 && node.y == 1.0){
+          final pos = positions[node.id]!;
+          final updatedNode = node.copyWith(x: pos.dx, y: pos.dy);
+          await saveNode(updatedNode, widget.graphPath);
+        }
+      }
+
+      final updatedContent = await file.readAsString();
+      final updatedGraph = GraphEntity.fromJson(jsonDecode(updatedContent));
+
+      _positions.forEach((id, offset) {
+        debugPrint('Nodo $id → $offset');
+      });
+
       setState(() {
-        _graph = graph;
-        _nodeList = graph.nodes;
-        _edgeList = graph.edges;
+        _graph = updatedGraph;
+        _nodeList = updatedGraph.nodes;
+        _edgeList = updatedGraph.edges;
+        _positions = positions;
       });
 
     } catch (e) {
       debugPrint('Error cargando grafo: $e');
+    }
+  }
+
+  Future<void> _reloadPositions() async {
+    if(_isReloading) return;
+    _isReloading = true;
+    try {
+      final file = _jsonFile;
+      final jsonContent = await file.readAsString();
+      final graph = GraphEntity.fromJson(jsonDecode(jsonContent));
+
+      final positions = calcularLayout(graph.nodes, graph.edges, recalculate: true);
+
+      for (final node in graph.nodes) {
+        final pos = positions[node.id]!;
+        final updatedNode = node.copyWith(x: pos.dx, y: pos.dy);
+        await saveNode(updatedNode, widget.graphPath);
+      }
+
+      final updatedContent = await file.readAsString();
+      final updatedGraph = GraphEntity.fromJson(jsonDecode(updatedContent));
+
+      _positions.forEach((id, offset) {
+        debugPrint('Nodo $id → $offset');
+      });
+
+      setState(() {
+        _graph = updatedGraph;
+        _nodeList = updatedGraph.nodes;
+        _edgeList = updatedGraph.edges;
+        _positions = positions;
+      });
+    } catch (e) {
+      debugPrint('Error recargando grafo: $e');
+    } finally {
+      _isReloading = false;
     }
   }
 
@@ -89,7 +152,15 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
       _gridMode = GridMode.values[
         (_gridMode.index + 1) % GridMode.values.length
       ];
+      FileManager.saveGridMode(widget.graphPath, _gridMode.name);
       debugPrint("GridMode = $_gridMode");
+    });
+  }
+
+  Future<void> _loadGridMode() async {
+    final modeString = await FileManager.getGridMode(widget.graphPath);
+    setState(() {
+      _gridMode = GridMode.values.firstWhere((e) => e.name == modeString, orElse: () => GridMode.dotted);
     });
   }
 
@@ -162,9 +233,20 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
               Navigator.push(
                   context,
                   MaterialPageRoute(builder: (c) => NodeList(graphPath: widget.graphPath,))
-              ).then((_) => _loadGraph());
+              ).then((_) async => await _loadGraph());
             },
           ),
+          actions: [
+            IconButton(
+              onPressed: () async {
+                await _reloadPositions();
+                },
+              icon: Icon(Icons.refresh, color: Colors.white,),
+              tooltip: "recargar grafo",
+            ),
+
+            SizedBox(width: 15.w,)
+          ],
         ),
 
         backgroundColor: blackGraph1,
@@ -180,7 +262,21 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
                     style: TextStyle(color: Colors.white38, fontSize: 16.sp),
                   ),
                 )
-            : GraphView(gridMode: _gridMode),
+            : GraphView(
+              gridMode: _gridMode,
+              transformationController: _transformController,
+              graph: _graph,
+              positions: _positions,
+              onNodeTap: (node){
+                Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (c) => NodeMenu(
+                      node: node,
+                      graphPath: widget.graphPath,)
+                    ),
+                ).then((_) async => await _loadGraph());
+              } ,
+            ),
 
             // ___________________________________________________SPEED DIAL___________________________________________________
             Positioned(
@@ -206,7 +302,7 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
                           null,
                           (newEdge) async{
                             await addEdge(newEdge, widget.graphPath);
-                            _loadGraph();
+                            await _loadGraph();
                           }
                         );
                       },
@@ -219,14 +315,14 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
                       onPressed: () {
                         AppDialogs.showCreateNodeDialog(
                           context,
-                          _nodeList,
+                          _nodeList.map((n) => n.title).toList(),
                               (nodeName, nodeContent) async {
                             final n = await createNode(nodeName, widget.graphPath );
                             await addNode(n, widget.graphPath);
                             if (nodeContent.isNotEmpty) {
                               FileManager.writeContent(n.filePath, nodeContent);
                             }
-                            _loadGraph();
+                            await _loadGraph();
                           },
                         );
                       },
@@ -237,7 +333,7 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
               ),
             ),
 
-            // ___________________________________________________GRID VIEW BUTTON___________________________________________________
+            // ___________________________________________________GRID VIEW BUTTONS___________________________________________________
             Positioned(
                 top: 12.h,
                 right: 12.h,
@@ -279,8 +375,17 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
                     onTap: (){
                       Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (c) => NiaScreen())
-                      ); //RELOAD GRAPH
+                          MaterialPageRoute(builder: (c) => NiaInputScreen(
+                              existingNodes: _graph.nodes.map((n) => n.title).toList())
+                          )
+                      ).then((outputNIA) async {
+                        if(outputNIA == null) return;
+                        if(!mounted) return;
+                        final newNodes = List<Map<String,dynamic>>.from(outputNIA['nodes']);
+                        final newEdges = List<Map<String,dynamic>>.from(outputNIA['edges']);
+                        await fuseGraphNIA(widget.graphPath, newNodes, newEdges);
+                        await _loadGraph();
+                      });
                     },
                     child: Image.asset("assets/icons/NIA_button.png")
                 ),
@@ -288,8 +393,20 @@ class _GraphCanvasState extends State<GraphCanvas> with SingleTickerProviderStat
                 SizedBox(width: 64.w),
 
                 InkWell(
-                  onTap: () {
+                  onTap: () async {
+                    AppDialogs.showSearchInGraph(
+                        context,
+                        _nodeList,
+                        (id){
+                          final pos = _positions[id]!;
+                          final screenSize = MediaQuery.of(context).size;
 
+                          final double dx = -(pos.dx - screenSize.width / 2);
+                          final double dy = -(pos.dy - screenSize.height / 2);
+
+                          _transformController.value = Matrix4.translationValues(dx, dy, 0);
+                        }
+                    );
                   },
                   child: Column(
                     mainAxisSize: MainAxisSize.min,

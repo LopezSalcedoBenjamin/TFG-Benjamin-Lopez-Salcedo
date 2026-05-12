@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 
 import 'package:flutter_screenutil/flutter_screenutil.dart';
-import '../../../../consts.dart';
 
 class ListButton extends StatelessWidget {
   final String name;
   final String appendix;
   final double height;
   final Color fillColor;
+  final Color apendixColor;
   final Widget? trailing;
 
   const ListButton({
@@ -16,6 +16,7 @@ class ListButton extends StatelessWidget {
     required this.appendix,
     required this.height,
     required this.fillColor,
+    this.apendixColor = Colors.white54,
     this.trailing,
   });
 
@@ -48,7 +49,7 @@ class ListButton extends StatelessWidget {
                     if(appendix != "")...[
                       Text(
                         appendix,
-                        style: TextStyle(color: Colors.white54, fontSize: 13.sp),
+                        style: TextStyle(color: apendixColor, fontSize: 13.sp),
                       ),
                     ]
                   ],

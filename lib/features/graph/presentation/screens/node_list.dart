@@ -62,8 +62,53 @@ class _NodeListState extends State<NodeList> {
         return nodes..sort((a,b) => b.title.toLowerCase().compareTo(a.title.toLowerCase()));
     }
   }
-  
-  
+
+  Future<void> _nodeOptions(context, option, NodeEntity node) async{
+    switch(option){
+      case NodeOptions.rename:
+        AppDialogs.showRenameNodeDialog(
+            context,
+            _nodes.map((n) => n.title).toList(),
+            node.title,
+                (newName) async{
+              String newPath = "";
+              String fileExtension = "";
+
+              try{
+                final file = File(node.filePath);
+                if(await file.exists()){
+                  fileExtension = file.path.split('.').last;
+                  await FileManager.renameFile(file.path, "$newName.$fileExtension");
+                  newPath = file.path;
+                }
+              }catch(e){
+                debugPrint('Error cargando archivo del nodo: $e');
+                return;
+              }
+
+              final renamedNode = node.copyWith(
+                title: newName,
+                filePath: "${newPath.substring(0, newPath.lastIndexOf('/'))}/$newName.$fileExtension",
+              );
+              await updateEdges(node, renamedNode, widget.graphPath);
+              await saveNode(renamedNode, widget.graphPath);
+
+              if (context.mounted) {
+                await _loadNodes();
+              }
+            }
+        );
+      case NodeOptions.delete:
+        AppDialogs.showDeleteNodeDialog(
+            context,
+            node.title,
+            () async {
+              await deleteNode(node, widget.graphPath);
+              if(context.mounted) await _loadNodes();
+            }
+        );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -71,7 +116,7 @@ class _NodeListState extends State<NodeList> {
     final filteredNodes = _nodes.where((n) => n.title.toLowerCase().contains(_search.toLowerCase())).toList();
 
     return GestureDetector(
-      onTap: () => FocusScope.of(context).unfocus(),
+      onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: Scaffold(
         appBar: AppBar(
           automaticallyImplyLeading: false,
@@ -178,7 +223,7 @@ class _NodeListState extends State<NodeList> {
                       onPressed: () async {
                         AppDialogs.showCreateNodeDialog(
                             context,
-                            _nodes,
+                            _nodes.map((n) => n.title).toList(),
                             (nodeName, nodeContent)async{
                               final n = await createNode(nodeName, widget.graphPath );
                               await addNode(n, widget.graphPath);
@@ -205,42 +250,86 @@ class _NodeListState extends State<NodeList> {
             SizedBox(height: 15.h,),
 
             Expanded(
-              child: ListView.builder(
-                shrinkWrap: true,
-                physics: BouncingScrollPhysics(),
-                padding: EdgeInsets.symmetric(horizontal: 50.w),
-                itemCount: filteredNodes.length,
-                itemBuilder: (context,index){
-                  final node = filteredNodes[index];
-                  final nOrigin = _edges.where((e) => e.from == node.title).length;
-                  final nDestiny = _edges.where((e) => e.to == node.title).length;
-                  return GestureDetector(
-                      onTap: () async {
-                        await Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (c) => NodeMenu(
-                              node: node,
-                              graphPath: widget.graphPath,)
-                            )
-                        ).then((_) async => await _loadNodes());
-                      },
-                      onLongPress: (){
-
-                      },
-                      child: ListButton(
-                        name: node.title.length > 25
-                            ? "${node.title.substring(0, 25)}..."
-                            : node.title,
-                        appendix: nOrigin > 0 || nDestiny > 0 ?
-                          "Origen: $nOrigin | Destino: $nDestiny"
-                          : "Sin relaciones",
-                        height: itemSize,
-                        fillColor: blackGraph2,
+                    child: _nodes.isEmpty ?
+                    Container(
+                      alignment: Alignment.center,
+                      child: Text(
+                        'Todavía no hay nodos en este grafo\nPulsa + para añadir uno nuevo',
+                        style: TextStyle(color: Colors.white38, fontSize: 16.sp),
                       ),
-                  );
-                },
-              ),
-            ),
+                    )
+                        : ListView.builder(
+                      shrinkWrap: true,
+                      physics: BouncingScrollPhysics(),
+                      padding: EdgeInsets.symmetric(horizontal: 50.w),
+                      itemCount: filteredNodes.length,
+                      itemBuilder: (context,index){
+                        final node = filteredNodes[index];
+                        final nOrigin = _edges.where((e) => e.from == node.title).length;
+                        final nDestiny = _edges.where((e) => e.to == node.title).length;
+                        return GestureDetector(
+                          onTap: () async {
+                            await Navigator.push(
+                                context,
+                                MaterialPageRoute(builder: (c) => NodeMenu(
+                                  node: node,
+                                  graphPath: widget.graphPath,)
+                                )
+                            ).then((_) async => await _loadNodes());
+                          },
+                          onLongPress: () {
+                            showModalBottomSheet(
+                              context: context,
+                              backgroundColor: blackGraph2,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(20.r)),
+                              ),
+                              builder: (_) => Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Padding(
+                                    padding: EdgeInsets.symmetric(horizontal: 20.w, vertical: 12.h),
+                                    child: Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(node.title, style: TextStyle(color: Colors.white, fontSize: 16.sp, fontWeight: FontWeight.bold)),
+                                        Text(
+                                          nOrigin > 0 || nDestiny > 0 ? "Origen: $nOrigin | Destino: $nDestiny" : "Sin relaciones",
+                                          style: TextStyle(color: Colors.white38, fontSize: 13.sp),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  Divider(color: Colors.white12),
+                                  ListTile(
+                                    leading: Icon(Icons.edit, color: Colors.white),
+                                    title: Text("Renombrar", style: TextStyle(color: Colors.white)),
+                                    onTap: () { Navigator.pop(context); _nodeOptions(context, NodeOptions.rename, node); },
+                                  ),
+                                  ListTile(
+                                    leading: Icon(Icons.delete, color: Colors.red),
+                                    title: Text("Eliminar", style: TextStyle(color: Colors.red)),
+                                    onTap: () { Navigator.pop(context); _nodeOptions(context, NodeOptions.delete, node); },
+                                  ),
+                                  SizedBox(height: 20.h),
+                                ],
+                              ),
+                            );
+                          },
+                          child: ListButton(
+                            name: node.title.length > 25
+                                ? "${node.title.substring(0, 25)}..."
+                                : node.title,
+                            appendix: nOrigin > 0 || nDestiny > 0 ?
+                            "Origen: $nOrigin | Destino: $nDestiny"
+                                : "Sin relaciones",
+                            height: itemSize,
+                            fillColor: blackGraph2,
+                          ),
+                        );
+                      },
+                    ),
+                  ),
 
             SizedBox(height:15.h,),
           ],
