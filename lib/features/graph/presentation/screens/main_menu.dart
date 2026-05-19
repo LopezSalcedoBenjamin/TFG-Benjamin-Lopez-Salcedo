@@ -16,6 +16,7 @@ import 'package:nodos_inteligencia_artificial_tfg_benjamin/permission_service.da
 enum SortMode {nameAZ, nameZA, lastAccessed, newGraphs, oldGraphs}
 
 class MainMenu extends StatefulWidget {
+  const MainMenu({super.key});
   @override
   State<MainMenu> createState() => _MainMenuState();
   //State<StatefulWidget> createState() {

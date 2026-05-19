@@ -1,0 +1,7 @@
+venv/
+__pycache__/
+pruebas/
+Datos input/
+*.gguf
+*.log
+Notepad Versions/

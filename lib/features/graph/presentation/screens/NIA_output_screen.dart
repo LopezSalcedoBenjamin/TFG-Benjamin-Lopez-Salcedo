@@ -37,164 +37,6 @@ class _NiaOutputScreenState extends State<NiaOutputScreen> {
   int _actualChunk = 0;
   int _totalChunks = 0;
 
-  final _preset = jsonDecode('''{
-  "nodes": [
-      {
-      "id": "1",
-      "title": "Rogir"
-      },
-      {
-        "id": "2",
-        "title": "Dorian"
-      },
-      {
-        "id": "3",
-        "title": "Phoenix"
-      },
-      {
-        "id": "4",
-        "title": "Ofelia"
-      },
-      {
-        "id": "5",
-        "title": "Maria"
-      },
-      {
-        "id": "6",
-        "title": "Abel"
-      },
-      {
-        "id": "7",
-        "title": "Roze Myre"
-      },
-      {
-        "id": "8",
-        "title": "Phoenix Right"
-      },
-      {
-        "id": "9",
-        "title": "Gina"
-      },
-      {
-        "id": "10",
-        "title": "María"
-      },
-      {
-        "id": "11",
-        "title": "Regina"
-      },
-      {
-        "id": "12",
-        "title": "Wallace"
-      },
-      {
-        "id": "13",
-        "title": "Layton"
-      },
-      {
-        "id": "14",
-        "title": "Rosa Diaz"
-      }
-      ],
-      "edges": [
-      {
-      "node1": "Rogir",
-      "node2": "Layton",
-      "type": "Contrata"
-      },
-      {
-        "node1": "Layton",
-        "node2": "Phoenix Right",
-        "type": "Contacta"
-      },
-      {
-        "node1": "Layton",
-        "node2": "Roze Myre",
-        "type": "Pide acompañamiento"
-      },
-      {
-        "node1": "Phoenix Right",
-        "node2": "Rosa Diaz",
-        "type": "Solicita ayuda"
-      },
-      {
-        "node1": "Dorian",
-        "node2": "Layton",
-        "type": "Saluda"
-      },
-      {
-        "node1": "Dorian",
-        "node2": "Phoenix Right",
-        "type": "Saluda"
-      },
-      {
-        "node1": "Rogir",
-        "node2": "Roze Myre",
-        "type": "Antigua estudiante"
-      },
-      {
-        "node1": "Dorian",
-        "node2": "Layton",
-        "type": "acompañamiento"
-      },
-      {
-        "node1": "Dorian",
-        "node2": "Phoenix",
-        "type": "acompañamiento"
-      },
-      {
-        "node1": "Dorian",
-        "node2": "Roze Myre",
-        "type": "acompañamiento"
-      },
-      {
-        "node1": "Dorian",
-        "node2": "Rosa Diaz",
-        "type": "acompañamiento"
-      },
-      {
-        "node1": "Phoenix",
-        "node2": "Wallace",
-        "type": "observación"
-      },
-      {
-        "node1": "Layton",
-        "node2": "Wallace",
-        "type": "observación"
-      },
-      {
-        "node1": "Roze Myre",
-        "node2": "Ofelia",
-        "type": "pregunta"
-      },
-      {
-        "node1": "Rosa Diaz",
-        "node2": "Ofelia",
-        "type": "pregunta"
-      },
-      {
-        "node1": "Rosa Diaz",
-        "node2": "Gina",
-        "type": "empujada"
-      },
-      {
-        "node1": "Roze Myre",
-        "node2": "Regina",
-        "type": "amistad"
-      },
-      {
-        "node1": "Rosa Diaz",
-        "node2": "María",
-        "type": "capturada por"
-      },
-      {
-        "node1": "Maria",
-        "node2": "Rogir",
-        "type": "segurata de"
-      }
-      ]
-  }''') as Map<String,dynamic>;
-
   List<Map<String, dynamic>> _nodes = [];
   List<Map<String, dynamic>> _edges = [];
   List<String> _allNodeNames = [];
@@ -202,8 +44,6 @@ class _NiaOutputScreenState extends State<NiaOutputScreen> {
   @override
   void initState() {
     super.initState();
-    _nodes = List<Map<String, dynamic>>.from(_preset['nodes']);
-    _edges = List<Map<String, dynamic>>.from(_preset['edges']);
     _loadNodes();
     _startProcessing();
   }
@@ -258,7 +98,6 @@ class _NiaOutputScreenState extends State<NiaOutputScreen> {
       setState(() {
         _error = true;
         _phase = "No se pudo conectar: $e";
-        _state = NiaState.completed;
       });
     }
   }
