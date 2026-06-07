@@ -227,7 +227,7 @@ def procesar_texto(text: str, nombre_prueba: str):
         output = model.generate(
             prompt=prompt,
             n_predict=2048,
-            temp=0,
+            temp=0.2,
             top_k=40,
             top_p=0.9,
             repeat_penalty=1.2
