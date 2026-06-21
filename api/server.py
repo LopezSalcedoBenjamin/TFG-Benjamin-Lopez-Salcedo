@@ -123,11 +123,14 @@ def convertir_formato_app(json_final: dict) -> dict:
 
 def generar_grafo(json_final: dict, nombre_prueba: str, timestamp: str):
     relaciones = json_final["relaciones"]
+    huerfanos = json_final["nodos_huerfanos"]
 
     nombres = set()
     for r in relaciones:
         nombres.add(r["personaje1"])
         nombres.add(r["personaje2"])
+
+    nombres.update(huerfanos)
 
     G = nx.DiGraph()
     G.add_nodes_from(list(nombres))

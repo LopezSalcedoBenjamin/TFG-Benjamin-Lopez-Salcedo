@@ -84,6 +84,7 @@ class _NiaOutputScreenState extends State<NiaOutputScreen> {
                   _nodes = List<Map<String, dynamic>>.from(event['datos']['nodes']);
                   _edges = List<Map<String, dynamic>>.from(event['datos']['edges']);
                   _state = NiaState.completed;
+                  _allNodeNames = {...widget.existingNodes, ..._nodes.map((n) => n['title'].toString())}.toList();
               }
             });
           },
