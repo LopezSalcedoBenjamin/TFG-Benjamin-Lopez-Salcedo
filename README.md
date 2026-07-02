@@ -74,7 +74,7 @@ pip install gpt4all[cuda]
 
 ### 4. Descarga el modelo
 
-El modelo utilizado es `qwen2.5-coder-7b-instruct-q4_0.gguf`, descargable desde [GPT4All](https://observablehq.com/@simonw/gpt4all-models) o pulsando este [link](https://gpt4all.io/models/gguf/Meta-Llama-3-8B-Instruct.Q4_0.gguf).
+El modelo utilizado es `qwen2.5-coder-7b-instruct-q4_0.gguf`, descargable desde [GPT4All](https://observablehq.com/@simonw/gpt4all-models) o pulsando este [link](https://huggingface.co/Qwen/Qwen2.5-Coder-7B-Instruct-GGUF/resolve/main/qwen2.5-coder-7b-instruct-q4_0.gguf).
 
 Una vez descargado, colócalo en:
 - **Windows:** `C:\Users\<usuario>\.cache\gpt4all\`
